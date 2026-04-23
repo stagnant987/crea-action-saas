@@ -5,7 +5,7 @@ const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { DatabaseSync } = require('node:sqlite');
+const Database = require('better-sqlite3');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const app  = express();
@@ -26,8 +26,8 @@ if (process.env.NODE_ENV === 'production') {
 
 // ── Database ──────────────────────────────────────────────────────────────────
 const dbPath = path.join(__dirname, 'crea.db');
-const db = new DatabaseSync(dbPath);
-db.exec('PRAGMA journal_mode = WAL');
+const db = new Database(dbPath);
+db.pragma('journal_mode = WAL');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS platforms (
