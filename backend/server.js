@@ -7,6 +7,9 @@ const path    = require('path');
 const { v4: uuidv4 } = require('uuid');
 const Database = require('better-sqlite3');
 const Anthropic = require('@anthropic-ai/sdk');
+const jwt     = require('jsonwebtoken');
+const bcrypt  = require('bcryptjs');
+const JWT_SECRET = process.env.JWT_SECRET || 'crea-action-secret-change-in-prod';
 const CONNECTORS = {
   youtube:   require('./connectors/youtube'),
   instagram: require('./connectors/instagram'),
@@ -114,6 +117,15 @@ db.exec(`
     month      TEXT UNIQUE NOT NULL,
     total      REAL DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS users (
+    id           TEXT PRIMARY KEY,
+    email        TEXT UNIQUE NOT NULL,
+    password     TEXT NOT NULL,
+    name         TEXT DEFAULT '',
+    plan         TEXT DEFAULT 'free',
+    created_at   TEXT DEFAULT (datetime('now'))
   );
 
   CREATE TABLE IF NOT EXISTS ai_cache (
@@ -601,6 +613,46 @@ app.get('/api/ai/daily-insight', async (req, res) => {
   } catch (e) {
     res.status(e.status || 500).json({ error: e.message });
   }
+});
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+
+function authMiddleware(req, res, next) {
+  const h = req.headers.authorization;
+  if (!h || !h.startsWith('Bearer ')) return res.status(401).json({ error: 'Non authentifié' });
+  try {
+    req.user = jwt.verify(h.slice(7), JWT_SECRET);
+    next();
+  } catch { res.status(401).json({ error: 'Token invalide' }); }
+}
+
+app.post('/api/auth/register', async (req, res) => {
+  const { email, password, name } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
+  if (password.length < 6) return res.status(400).json({ error: 'Mot de passe trop court (6 min)' });
+  const exists = db.prepare('SELECT id FROM users WHERE email=?').get(email.toLowerCase());
+  if (exists) return res.status(400).json({ error: 'Email déjà utilisé' });
+  const hash = await bcrypt.hash(password, 10);
+  const id   = uuidv4();
+  db.prepare('INSERT INTO users (id,email,password,name) VALUES (?,?,?,?)').run(id, email.toLowerCase(), hash, name || '');
+  const token = jwt.sign({ id, email: email.toLowerCase(), name: name || '' }, JWT_SECRET, { expiresIn: '30d' });
+  res.json({ token, user: { id, email: email.toLowerCase(), name: name || '', plan: 'free' } });
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
+  const user = db.prepare('SELECT * FROM users WHERE email=?').get(email.toLowerCase());
+  if (!user) return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+  const ok = await bcrypt.compare(password, user.password);
+  if (!ok) return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+  const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, JWT_SECRET, { expiresIn: '30d' });
+  res.json({ token, user: { id: user.id, email: user.email, name: user.name, plan: user.plan } });
+});
+
+app.get('/api/auth/me', authMiddleware, (req, res) => {
+  const user = db.prepare('SELECT id,email,name,plan,created_at FROM users WHERE id=?').get(req.user.id);
+  res.json(user || req.user);
 });
 
 // ── CONNECTIONS — OAuth + Sync ────────────────────────────────────────────────

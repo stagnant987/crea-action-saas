@@ -2,9 +2,10 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Zap, Target, FlaskConical,
-  Settings, Bell, RefreshCw, TrendingUp, Menu, X, Bot,
+  Settings, Bell, RefreshCw, TrendingUp, Menu, X, Bot, LogOut,
 } from 'lucide-react';
 import { api, fmt } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 // ── Toast context ─────────────────────────────────────────────────────────────
 export const ToastCtx = createContext(null);
@@ -54,6 +55,7 @@ export default function Layout({ children }) {
   const [insight, setInsight]   = useState('');
   const [sideOpen, setSideOpen] = useState(false);
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     api.dashboard().then(d => setRevenue(d.total_revenue)).catch(() => {});
@@ -133,9 +135,20 @@ export default function Layout({ children }) {
             </div>
           )}
 
-          {/* Version */}
+          {/* User + logout */}
           <div style={{ padding:'12px 16px', borderTop:'1px solid #1e1e3a' }}>
-            <div style={{ fontSize:10, color:'#2a2a4a', letterSpacing:1 }}>v3.0 · React + Node.js</div>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <div>
+                <div style={{ fontSize:12, color:'#e2e8f0', fontWeight:600 }}>{user?.name || user?.email?.split('@')[0]}</div>
+                <div style={{ fontSize:10, color:'#2a2a4a', marginTop:2 }}>{user?.plan || 'free'}</div>
+              </div>
+              <button onClick={logout} title="Se déconnecter"
+                style={{ background:'none', border:'1px solid #1e1e3a', borderRadius:7,
+                  color:'#475569', cursor:'pointer', padding:'5px 7px',
+                  display:'flex', alignItems:'center', transition:'all .2s' }}>
+                <LogOut size={13} />
+              </button>
+            </div>
           </div>
         </aside>
 
