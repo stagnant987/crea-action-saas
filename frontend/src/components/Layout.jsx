@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Zap, Target, FlaskConical,
-  Settings, Bell, RefreshCw, TrendingUp, Menu, X,
+  Settings, Bell, RefreshCw, TrendingUp, Menu, X, Bot,
 } from 'lucide-react';
 import { api, fmt } from '../lib/api';
 
@@ -41,7 +41,8 @@ function ToastProvider({ children }) {
 // ── Sidebar nav items ─────────────────────────────────────────────────────────
 const NAV = [
   { to: '/',              icon: LayoutDashboard, label: 'Dashboard',        color: '#00d4ff' },
-  { to: '/studio',        icon: Zap,             label: 'Auto Money Studio', color: '#f59e0b', hot: true },
+  { to: '/operator',      icon: Bot,             label: 'AI Operator',      color: '#a78bfa', hot: true },
+  { to: '/studio',        icon: Zap,             label: 'Auto Money Studio', color: '#f59e0b' },
   { to: '/opportunities', icon: Target,           label: 'Opportunités',     color: '#10b981' },
   { to: '/tests',         icon: FlaskConical,     label: 'Tests & Scale',    color: '#8b5cf6' },
   { to: '/platforms',     icon: Settings,         label: 'Plateformes',      color: '#94a3b8' },

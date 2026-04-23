@@ -572,6 +572,79 @@ app.get('/api/ai/daily-insight', async (req, res) => {
   }
 });
 
+// ── AI OPERATOR — Brief quotidien complet ─────────────────────────────────────
+app.post('/api/operator/daily-brief', async (req, res) => {
+  try {
+    const platforms = db.prepare('SELECT * FROM platforms').all();
+    const trends    = db.prepare("SELECT * FROM trends WHERE status='active' ORDER BY score DESC LIMIT 5").all();
+    const opps      = db.prepare("SELECT * FROM opportunities ORDER BY score DESC LIMIT 5").all();
+    const revenue   = db.prepare('SELECT SUM(revenue) as s FROM platforms').get().s || 0;
+
+    const ctx = `Plateformes: ${platforms.map(p=>`${p.name}(${p.revenue}€)`).join(', ')}. Revenus actuels: ${revenue}€/mois. Tendances actives: ${trends.map(t=>t.niche).join(', ')}.`;
+
+    const msg = await ai.messages.create({
+      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
+      max_tokens: 4000,
+      system: [{ type:'text', text:`Tu es AI Operator, un copilote stratégique intégré dans Crea Action, un SaaS pour créateurs de contenu. Contexte utilisateur: ${ctx}. Tu réponds UNIQUEMENT en JSON valide, aucun texte autour.`, cache_control:{ type:'ephemeral' } }],
+      messages: [{ role:'user', content:`Génère le brief opérateur quotidien complet en JSON avec cette structure exacte:
+{
+  "analyse": {
+    "tendances": [
+      {"niche": string, "plateforme": string, "potentiel": string, "pourquoi": string},
+      {"niche": string, "plateforme": string, "potentiel": string, "pourquoi": string},
+      {"niche": string, "plateforme": string, "potentiel": string, "pourquoi": string}
+    ],
+    "niche_du_jour": string,
+    "raison": string
+  },
+  "contenus": [
+    {"titre": string, "plateforme": string, "hook": string, "script": string, "visuel": string, "cta": string, "score": number},
+    (répète 10 fois)
+  ],
+  "decisions": {
+    "top5_ids": [0,1,2,3,4],
+    "explications": [string, string, string, string, string]
+  },
+  "actions": [
+    {"ordre": number, "action": string, "lien": string, "urgent": boolean}
+  ],
+  "monetisation": {
+    "type": string,
+    "produit": string,
+    "prix": string,
+    "plateforme": string,
+    "cta": string,
+    "revenu_estime": string
+  },
+  "optimisation": {
+    "demain": string,
+    "amélioration": string,
+    "a_eviter": string
+  }
+}` }]
+    });
+
+    const raw = msg.content[0].text.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
+    const brief = JSON.parse(raw);
+    brief.generated_at = new Date().toISOString();
+    brief.revenue_actuel = revenue;
+
+    const cacheKey = `operator_brief_${new Date().toISOString().slice(0,10)}`;
+    db.prepare('INSERT OR REPLACE INTO ai_cache (id,cache_key,content) VALUES (?,?,?)').run(uuidv4(), cacheKey, JSON.stringify(brief));
+
+    res.json(brief);
+  } catch(e) {
+    res.status(e.status || 500).json({ error: e.message });
+  }
+});
+
+app.get('/api/operator/last-brief', (req, res) => {
+  const cacheKey = `operator_brief_${new Date().toISOString().slice(0,10)}`;
+  const row = db.prepare('SELECT content FROM ai_cache WHERE cache_key=?').get(cacheKey);
+  if (row) return res.json(JSON.parse(row.content));
+  res.json(null);
+});
+
 // ── Catch-all → React app (production) ────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {

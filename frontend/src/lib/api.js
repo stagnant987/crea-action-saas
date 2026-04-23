@@ -53,6 +53,10 @@ export const api = {
   optimize:       ()     => req('/ai/optimize', { method: 'POST' }),
   chat:           (d)    => req('/ai/chat', { method: 'POST', body: JSON.stringify(d) }),
   dailyInsight:   ()     => req('/ai/daily-insight'),
+
+  // AI Operator
+  operatorBrief:      () => req('/operator/daily-brief', { method: 'POST' }),
+  operatorLastBrief:  () => req('/operator/last-brief'),
 };
 
 export const fmt = (n) =>
