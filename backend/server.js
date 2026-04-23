@@ -7,6 +7,12 @@ const path    = require('path');
 const { v4: uuidv4 } = require('uuid');
 const Database = require('better-sqlite3');
 const Anthropic = require('@anthropic-ai/sdk');
+const CONNECTORS = {
+  youtube:   require('./connectors/youtube'),
+  instagram: require('./connectors/instagram'),
+  tiktok:    require('./connectors/tiktok'),
+  patreon:   require('./connectors/patreon'),
+};
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -115,6 +121,31 @@ db.exec(`
     cache_key  TEXT UNIQUE NOT NULL,
     content    TEXT NOT NULL,
     created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS platform_connections (
+    id            TEXT PRIMARY KEY,
+    platform_id   TEXT NOT NULL,
+    provider      TEXT NOT NULL,
+    access_token  TEXT NOT NULL,
+    refresh_token TEXT DEFAULT '',
+    expires_at    INTEGER DEFAULT 0,
+    username      TEXT DEFAULT '',
+    connected_at  TEXT DEFAULT (datetime('now')),
+    last_sync     TEXT DEFAULT NULL,
+    sync_status   TEXT DEFAULT 'pending',
+    UNIQUE(platform_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS sync_logs (
+    id          TEXT PRIMARY KEY,
+    platform_id TEXT NOT NULL,
+    provider    TEXT NOT NULL,
+    status      TEXT NOT NULL,
+    followers   INTEGER DEFAULT 0,
+    revenue     REAL DEFAULT 0,
+    message     TEXT DEFAULT '',
+    created_at  TEXT DEFAULT (datetime('now'))
   );
 `);
 
@@ -571,6 +602,146 @@ app.get('/api/ai/daily-insight', async (req, res) => {
     res.status(e.status || 500).json({ error: e.message });
   }
 });
+
+// ── CONNECTIONS — OAuth + Sync ────────────────────────────────────────────────
+
+// Helper: sync one platform using its stored connection
+async function syncPlatform(platformId) {
+  const conn = db.prepare('SELECT * FROM platform_connections WHERE platform_id=?').get(platformId);
+  if (!conn) throw new Error('Aucune connexion trouvée');
+
+  const connector = CONNECTORS[conn.provider];
+  if (!connector) throw new Error('Provider inconnu: ' + conn.provider);
+
+  let token = conn.access_token;
+
+  // Refresh if expired
+  if (conn.expires_at && Date.now() / 1000 > conn.expires_at - 300) {
+    if (conn.refresh_token && connector.refreshToken) {
+      const refreshed = await connector.refreshToken(conn.refresh_token);
+      token = refreshed.access_token;
+      db.prepare('UPDATE platform_connections SET access_token=?, expires_at=? WHERE platform_id=?')
+        .run(token, Math.floor(Date.now() / 1000) + (refreshed.expires_in || 3600), platformId);
+    }
+  }
+
+  const stats = await connector.getStats(token);
+
+  // Update platform data
+  const updateFields = [];
+  const updateValues = [];
+  if (stats.followers !== null && stats.followers !== undefined) {
+    updateFields.push('followers=?'); updateValues.push(stats.followers);
+  }
+  if (stats.revenue !== null && stats.revenue !== undefined) {
+    updateFields.push('revenue=?'); updateValues.push(stats.revenue);
+  }
+  if (updateFields.length > 0) {
+    updateValues.push(platformId);
+    db.prepare(`UPDATE platforms SET ${updateFields.join(',')} WHERE id=?`).run(...updateValues);
+  }
+
+  // Log
+  db.prepare('INSERT INTO sync_logs (id,platform_id,provider,status,followers,revenue,message) VALUES (?,?,?,?,?,?,?)')
+    .run(uuidv4(), platformId, conn.provider, 'success', stats.followers || 0, stats.revenue || 0, JSON.stringify(stats));
+
+  db.prepare('UPDATE platform_connections SET last_sync=?, sync_status=?, username=? WHERE platform_id=?')
+    .run(new Date().toISOString(), 'ok', stats.username || '', platformId);
+
+  return stats;
+}
+
+// GET /api/connections — list all connections
+app.get('/api/connections', (req, res) => {
+  const conns = db.prepare('SELECT platform_id, provider, username, connected_at, last_sync, sync_status FROM platform_connections').all();
+  res.json(conns);
+});
+
+// GET /api/connect/:provider/url?platform_id=xxx — get OAuth URL
+app.get('/api/connect/:provider/url', (req, res) => {
+  const connector = CONNECTORS[req.params.provider];
+  if (!connector) return res.status(400).json({ error: 'Provider inconnu' });
+  if (!process.env[req.params.provider.toUpperCase() + '_CLIENT_ID'] &&
+      !process.env[req.params.provider.toUpperCase() + '_CLIENT_KEY']) {
+    return res.status(400).json({ error: `${connector.name} non configuré. Ajoutez les clés API dans les variables d'environnement.` });
+  }
+  const state = Buffer.from(JSON.stringify({ platform_id: req.query.platform_id, ts: Date.now() })).toString('base64url');
+  const url = connector.getAuthUrl(state);
+  res.json({ url });
+});
+
+// GET /api/connect/:provider/callback — OAuth callback
+app.get('/api/connect/:provider/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  const appUrl = process.env.APP_URL || 'http://localhost:3001';
+
+  if (error) return res.redirect(`${appUrl}/platforms?error=${encodeURIComponent(error)}`);
+  if (!code) return res.redirect(`${appUrl}/platforms?error=no_code`);
+
+  try {
+    const { platform_id } = JSON.parse(Buffer.from(state, 'base64url').toString());
+    const connector = CONNECTORS[req.params.provider];
+    const tokens    = await connector.exchangeCode(code);
+
+    db.prepare(`INSERT OR REPLACE INTO platform_connections
+      (id,platform_id,provider,access_token,refresh_token,expires_at,connected_at,sync_status)
+      VALUES (?,?,?,?,?,?,datetime('now'),'pending')`)
+      .run(uuidv4(), platform_id, req.params.provider, tokens.access_token,
+        tokens.refresh_token || '', Math.floor(Date.now() / 1000) + (tokens.expires_in || 3600));
+
+    // Immediate sync
+    await syncPlatform(platform_id).catch(() => {});
+    res.redirect(`${appUrl}/platforms?connected=${req.params.provider}`);
+  } catch(e) {
+    res.redirect(`${appUrl}/platforms?error=${encodeURIComponent(e.message)}`);
+  }
+});
+
+// POST /api/platforms/:id/sync — manual sync
+app.post('/api/platforms/:id/sync', async (req, res) => {
+  try {
+    const stats = await syncPlatform(req.params.id);
+    const platform = db.prepare('SELECT * FROM platforms WHERE id=?').get(req.params.id);
+    res.json({ success: true, stats, platform });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// DELETE /api/platforms/:id/connection — disconnect
+app.delete('/api/platforms/:id/connection', (req, res) => {
+  db.prepare('DELETE FROM platform_connections WHERE platform_id=?').run(req.params.id);
+  res.json({ success: true });
+});
+
+// POST /api/sync/all — sync all connected platforms
+app.post('/api/sync/all', async (req, res) => {
+  const conns = db.prepare('SELECT platform_id FROM platform_connections').all();
+  const results = [];
+  for (const { platform_id } of conns) {
+    try {
+      const stats = await syncPlatform(platform_id);
+      results.push({ platform_id, status: 'ok', stats });
+    } catch(e) {
+      results.push({ platform_id, status: 'error', error: e.message });
+    }
+  }
+  res.json({ synced: results.length, results });
+});
+
+// GET /api/platforms/:id/sync-history — last 10 syncs
+app.get('/api/platforms/:id/sync-history', (req, res) => {
+  const logs = db.prepare('SELECT * FROM sync_logs WHERE platform_id=? ORDER BY created_at DESC LIMIT 10').all(req.params.id);
+  res.json(logs);
+});
+
+// Auto-sync every 6 hours
+setInterval(async () => {
+  const conns = db.prepare('SELECT platform_id FROM platform_connections').all();
+  for (const { platform_id } of conns) {
+    await syncPlatform(platform_id).catch(() => {});
+  }
+}, 6 * 60 * 60 * 1000);
 
 // ── AI OPERATOR — Brief quotidien complet ─────────────────────────────────────
 app.post('/api/operator/daily-brief', async (req, res) => {
