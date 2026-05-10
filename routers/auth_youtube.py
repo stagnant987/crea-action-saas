@@ -184,3 +184,51 @@ def update_youtube_revenue(account_id: int, revenue: float,
     account.last_updated = datetime.utcnow()
     db.commit()
     return {"status": "ok", "estimated_revenue": revenue}
+
+
+@router.get("/videos")
+def get_youtube_videos(current_user: User = Depends(get_current_user),
+                       db: Session = Depends(get_db)):
+    """Retourne les dernières vidéos des comptes YouTube connectés."""
+    accounts = db.query(YouTubeAccount).filter_by(user_id=current_user.id).all()
+    all_videos = []
+    for account in accounts:
+        headers = {"Authorization": f"Bearer {account.access_token}"}
+        # Récupère les IDs des dernières vidéos
+        search_resp = httpx.get(
+            "https://www.googleapis.com/youtube/v3/search",
+            params={"part": "snippet", "forMine": "true", "type": "video",
+                    "maxResults": 12, "order": "date"},
+            headers=headers,
+        )
+        if search_resp.status_code != 200:
+            continue
+        items = search_resp.json().get("items", [])
+        if not items:
+            continue
+        video_ids = ",".join(i["id"]["videoId"] for i in items)
+        # Récupère les stats pour chaque vidéo
+        stats_resp = httpx.get(
+            "https://www.googleapis.com/youtube/v3/videos",
+            params={"part": "statistics,snippet", "id": video_ids},
+            headers=headers,
+        )
+        if stats_resp.status_code != 200:
+            continue
+        for v in stats_resp.json().get("items", []):
+            vid_id = v["id"]
+            snippet = v["snippet"]
+            stats = v.get("statistics", {})
+            all_videos.append({
+                "video_id": vid_id,
+                "title": snippet.get("title", ""),
+                "thumbnail": snippet.get("thumbnails", {}).get("medium", {}).get("url", ""),
+                "published_at": snippet.get("publishedAt", ""),
+                "channel_name": account.channel_name,
+                "views": int(stats.get("viewCount", 0)),
+                "likes": int(stats.get("likeCount", 0)),
+                "comments": int(stats.get("commentCount", 0)),
+                "url": f"https://www.youtube.com/watch?v={vid_id}",
+            })
+    all_videos.sort(key=lambda x: x["published_at"], reverse=True)
+    return all_videos
