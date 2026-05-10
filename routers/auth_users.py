@@ -1,8 +1,10 @@
 """Authentification utilisateur — JWT + bcrypt."""
+import time
+from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -12,6 +14,22 @@ from sqlalchemy.orm import Session
 import config
 from database import get_db
 from models import User
+
+# ── Rate limiting simple (en mémoire) ────────────────────────────────────────
+_attempts: dict = defaultdict(list)  # ip → [timestamps]
+_MAX_ATTEMPTS = 10
+_WINDOW_SECONDS = 60
+
+def _check_rate_limit(request: Request):
+    ip = request.client.host
+    now = time.time()
+    _attempts[ip] = [t for t in _attempts[ip] if now - t < _WINDOW_SECONDS]
+    if len(_attempts[ip]) >= _MAX_ATTEMPTS:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Trop de tentatives. Réessayez dans {_WINDOW_SECONDS} secondes."
+        )
+    _attempts[ip].append(now)
 
 router = APIRouter()
 
@@ -86,7 +104,8 @@ class ChangePasswordRequest(BaseModel):
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/token", response_model=TokenResponse)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    _check_rate_limit(request)
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -99,7 +118,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 
 @router.post("/register", response_model=TokenResponse)
-def register(req: RegisterRequest, db: Session = Depends(get_db)):
+def register(request: Request, req: RegisterRequest, db: Session = Depends(get_db)):
+    _check_rate_limit(request)
     if len(req.username) < 3:
         raise HTTPException(status_code=400, detail="Identifiant trop court (min 3 caractères).")
     if len(req.password) < 6:

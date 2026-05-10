@@ -457,6 +457,7 @@ tbody td{padding:9px 11px}
     <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</div>
     <div class="nav-item" data-page="ai-page" onclick="navigate('ai-page')"><i class="fas fa-robot" style="color:var(--purple2)"></i> Assistant IA</div>
     <div class="nav-item" data-page="planner" onclick="navigate('planner')"><i class="fas fa-calendar-alt" style="color:var(--cyan)"></i> Planificateur</div>
+    <div class="nav-item" data-page="plateau-studio" onclick="navigate('plateau-studio')"><i class="fas fa-rocket" style="color:var(--purple2)"></i> Plateau Studio</div>
   </div>
   <div class="nav-sec">
     <div class="nav-lbl">Réseaux</div>
@@ -702,7 +703,61 @@ tbody td{padding:9px 11px}
           <strong style="color:var(--cyan)">Stack :</strong> Python · FastAPI · SQLite · Anthropic
         </p>
       </div>
+      <div style="margin-bottom:24px">
+        <div style="font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px">Sécurité — Changer le mot de passe</div>
+        <div class="fg_"><label class="fl">Mot de passe actuel</label><input type="password" class="fi" id="set-cur-pass" placeholder="Mot de passe actuel"></div>
+        <div class="fg_"><label class="fl">Nouveau mot de passe</label><input type="password" class="fi" id="set-new-pass" placeholder="Minimum 6 caractères"></div>
+        <div class="fg_"><label class="fl">Confirmer</label><input type="password" class="fi" id="set-conf-pass" placeholder="Répétez le nouveau mot de passe"></div>
+        <button class="btn bp bfull" onclick="changePassword()"><i class="fas fa-key"></i> Changer le mot de passe</button>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- ─── PLATEAU STUDIO ────────────────────────────────────────────── -->
+<div class="page" id="page-plateau-studio">
+  <div class="page-title"><i class="fas fa-rocket" style="color:var(--purple2)"></i> PLATEAU STUDIO</div>
+  <!-- Onglets -->
+  <div class="flex g8 mb20" id="ps-tabs">
+    <button class="btn bp" id="ps-tab-trends" onclick="psTab('trends')"><i class="fas fa-fire"></i> Tendances</button>
+    <button class="btn bg_" id="ps-tab-ideas" onclick="psTab('ideas')"><i class="fas fa-lightbulb"></i> Idées de contenu</button>
+    <button class="btn bg_" id="ps-tab-ab" onclick="psTab('ab')"><i class="fas fa-flask"></i> Tests A/B</button>
+    <button class="btn bg_" id="ps-tab-opps" onclick="psTab('opps')"><i class="fas fa-star"></i> Opportunités</button>
+  </div>
+
+  <!-- Tendances -->
+  <div id="ps-section-trends">
+    <div class="flex g8 mb16">
+      <span style="font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;align-self:center">Tendances IA détectées</span>
+      <button class="btn bai bsm" style="margin-left:auto" onclick="psDetectTrends()"><i class="fas fa-magic"></i> Détecter avec IA</button>
+    </div>
+    <div id="ps-trends-list" class="ga"></div>
+  </div>
+
+  <!-- Idées de contenu -->
+  <div id="ps-section-ideas" style="display:none">
+    <div class="flex g8 mb16">
+      <span style="font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;align-self:center">Idées de contenu</span>
+      <button class="btn bai bsm" style="margin-left:auto" onclick="openModal('modal-gen-idea')"><i class="fas fa-magic"></i> Générer avec IA</button>
+    </div>
+    <div id="ps-ideas-list" class="ga"></div>
+  </div>
+
+  <!-- Tests A/B -->
+  <div id="ps-section-ab" style="display:none">
+    <div class="flex g8 mb16">
+      <span style="font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;align-self:center">Expériences A/B</span>
+    </div>
+    <div id="ps-ab-list" class="ga"></div>
+  </div>
+
+  <!-- Opportunités -->
+  <div id="ps-section-opps" style="display:none">
+    <div class="flex g8 mb16">
+      <span style="font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;align-self:center">Opportunités</span>
+      <button class="btn bai bsm" style="margin-left:auto" onclick="psScanOpps()"><i class="fas fa-magic"></i> Scanner avec IA</button>
+    </div>
+    <div id="ps-opps-list" class="ga"></div>
   </div>
 </div>
 
@@ -860,6 +915,18 @@ tbody td{padding:9px 11px}
   <div class="mdf"><button class="btn bg_" onclick="closeModal('modal-add-custom-platform')">Annuler</button><button class="btn bp" onclick="createCustomPlatform()"><i class="fas fa-check"></i> Créer</button></div>
 </div></div>
 
+<!-- Generate Content Idea -->
+<div class="mo" id="modal-gen-idea"><div class="md">
+  <div class="mdt"><i class="fas fa-lightbulb"></i> GÉNÉRER UNE IDÉE DE CONTENU</div>
+  <div class="fg_"><label class="fl">Titre / Sujet</label><input class="fi" id="idea-title" placeholder="Ex: Productivité en 2025"></div>
+  <div class="frow">
+    <div class="fg_"><label class="fl">Plateforme</label><select class="fsel" id="idea-platform"><option value="youtube">YouTube</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="twitter">Twitter/X</option><option value="linkedin">LinkedIn</option></select></div>
+    <div class="fg_"><label class="fl">Type de contenu</label><select class="fsel" id="idea-type"><option value="video">Vidéo</option><option value="short">Short / Reel</option><option value="post">Post</option><option value="article">Article</option></select></div>
+  </div>
+  <div class="fg_"><label class="fl">Brief (optionnel)</label><textarea class="fta" id="idea-brief" placeholder="Décrivez brièvement l'angle ou les points clés..."></textarea></div>
+  <div class="mdf"><button class="btn bg_" onclick="closeModal('modal-gen-idea')">Annuler</button><button class="btn bai" onclick="psGenerateIdea()"><i class="fas fa-magic"></i> Générer</button></div>
+</div></div>
+
 <div id="toasts"></div>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -901,6 +968,7 @@ function navigate(page) {
     products: loadProductsPage,
     settings: () => {},
     'video-studio': () => vsInit(),
+    'plateau-studio': loadPlateauStudio,
   };
   // Video studio needs full-height layout
   document.querySelector('.main').classList.toggle('vs-active', page === 'video-studio');
@@ -1538,7 +1606,12 @@ async function loadProductsPage() {
   const prods = await api('/api/products/').catch(()=>[]);
   const el = document.getElementById('prod-list');
   if (!prods.length){el.innerHTML='<div class="es"><i class="fas fa-box-open"></i><p>Aucun produit.</p></div>';return;}
-  el.innerHTML = prods.map(p=>`<div class="card gg"><div class="ch"><div><div style="font-size:13px;font-weight:600">${p.product_name}</div><span class="badge bgx">${p.platform}</span></div><div class="flex g8">${p.platform!=='manual'?`<button class="btn bg_ bsm" onclick="syncProd(${p.id},'${p.platform}')"><i class="fas fa-sync"></i></button>`:''}<button class="btn bd bsm" onclick="delProd(${p.id})"><i class="fas fa-trash"></i></button></div></div><div class="sv green">${fmt(p.monthly_revenue)}</div><div class="ss">Revenu mensuel</div><div class="div"></div><div class="flex g8"><input type="number" class="fi" id="pr-${p.id}" value="${p.monthly_revenue}" step="0.01" style="flex:1"><button class="btn bs bsm" onclick="updProd(${p.id})"><i class="fas fa-check"></i></button></div></div>`).join('');
+  el.innerHTML = prods.map(p => {
+    const syncBtn = (p.platform === 'gumroad' || p.platform === 'lemonsqueezy')
+      ? `<button class="btn bsm bs" onclick="syncProduct(${p.id}, '${p.platform}')"><i class="fas fa-sync-alt"></i> Sync</button>`
+      : '';
+    return `<div class="card gg"><div class="ch"><div><div style="font-size:13px;font-weight:600">${p.product_name}</div><span class="badge bgx">${p.platform}</span></div><div class="flex g8">${syncBtn}<button class="btn bd bsm" onclick="delProd(${p.id})"><i class="fas fa-trash"></i></button></div></div><div class="sv green">${fmt(p.monthly_revenue)}</div><div class="ss">Revenu mensuel</div><div class="div"></div><div class="flex g8"><input type="number" class="fi" id="pr-${p.id}" value="${p.monthly_revenue}" step="0.01" style="flex:1"><button class="btn bs bsm" onclick="updProd(${p.id})"><i class="fas fa-check"></i></button></div></div>`;
+  }).join('');
 }
 async function createProduct(){await api('/api/products/',{method:'POST',body:JSON.stringify({product_name:document.getElementById('prod-name').value,platform:document.getElementById('prod-platform').value,monthly_revenue:+document.getElementById('prod-rev').value||0,api_key:document.getElementById('prod-key').value})});toast('Produit créé','ok');closeModal('modal-add-product');loadProductsPage();}
 async function updProd(id){await api(`/api/products/${id}`,{method:'PUT',body:JSON.stringify({monthly_revenue:+document.getElementById(`pr-${id}`).value||0})});toast('Mis à jour','ok');loadProductsPage();}
@@ -1914,6 +1987,206 @@ function vsCancelExport(){
 function vsFmt(s){
   if(!s||isNaN(s)) return '0:00';
   return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+}
+
+// ─── ITEM 2 — Changement de mot de passe ────────────────────────────────────
+async function changePassword() {
+  const cur = document.getElementById('set-cur-pass').value;
+  const nw = document.getElementById('set-new-pass').value;
+  const conf = document.getElementById('set-conf-pass').value;
+  if (nw !== conf) { toast('Les mots de passe ne correspondent pas', 'err'); return; }
+  if (nw.length < 6) { toast('Minimum 6 caractères', 'err'); return; }
+  try {
+    await api('/api/users/change-password', { method: 'POST', body: JSON.stringify({ current_password: cur, new_password: nw }) });
+    toast('Mot de passe mis à jour', 'ok');
+    document.getElementById('set-cur-pass').value = '';
+    document.getElementById('set-new-pass').value = '';
+    document.getElementById('set-conf-pass').value = '';
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ─── ITEM 3 — Plateau Studio ─────────────────────────────────────────────────
+let _psActiveTab = 'trends';
+
+function psTab(tab) {
+  _psActiveTab = tab;
+  const tabs = ['trends', 'ideas', 'ab', 'opps'];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`ps-tab-${t}`);
+    const sec = document.getElementById(`ps-section-${t}`);
+    if (btn) btn.className = t === tab ? 'btn bp' : 'btn bg_';
+    if (sec) sec.style.display = t === tab ? '' : 'none';
+  });
+}
+
+async function loadPlateauStudio() {
+  psTab(_psActiveTab);
+  await Promise.all([
+    psFetchTrends(),
+    psFetchIdeas(),
+    psFetchAB(),
+    psFetchOpps(),
+  ]);
+}
+
+async function psFetchTrends() {
+  const el = document.getElementById('ps-trends-list');
+  try {
+    const data = await api('/api/studio/trends');
+    if (!data.length) {
+      el.innerHTML = '<div class="es"><i class="fas fa-fire"></i><p>Aucune tendance détectée. Cliquez sur "Détecter avec IA".</p></div>';
+      return;
+    }
+    el.innerHTML = data.map(t => `
+      <div class="card gc">
+        <div class="ch">
+          <span class="ct">${t.topic || t.name || 'Tendance'}</span>
+          <span class="badge bgc">Score: ${t.score ?? '—'}</span>
+        </div>
+        <div class="ss tm" style="margin-bottom:8px">${t.description || ''}</div>
+        ${t.potential_revenue !== undefined ? `<div class="flex jsb tsm"><span class="tm">Revenu potentiel</span><span style="color:var(--green);font-weight:600">${fmt(t.potential_revenue)}</span></div>` : ''}
+        ${t.platform ? `<div class="tsm tm" style="margin-top:6px"><i class="fas fa-tag" style="color:var(--cyan)"></i> ${t.platform}</div>` : ''}
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="es"><i class="fas fa-fire"></i><p>Erreur de chargement.</p></div>';
+  }
+}
+
+async function psDetectTrends() {
+  toast('Détection IA en cours...', 'inf');
+  try {
+    await api('/api/studio/trends/ai-detect', { method: 'POST' });
+    toast('Tendances détectées !', 'ok');
+    await psFetchTrends();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function psFetchIdeas() {
+  const el = document.getElementById('ps-ideas-list');
+  try {
+    const data = await api('/api/studio/content-ideas');
+    if (!data.length) {
+      el.innerHTML = '<div class="es"><i class="fas fa-lightbulb"></i><p>Aucune idée. Générez-en avec l\'IA !</p></div>';
+      return;
+    }
+    el.innerHTML = data.map(i => `
+      <div class="card gp">
+        <div class="ch">
+          <div style="font-size:13px;font-weight:600">${i.title || '—'}</div>
+          ${i.ai_score !== undefined ? `<span class="badge bgg">IA: ${i.ai_score}</span>` : ''}
+        </div>
+        ${i.platform ? `<div class="tsm tm" style="margin-bottom:6px"><i class="fas fa-tag" style="color:var(--purple2)"></i> ${i.platform}</div>` : ''}
+        ${i.content_type ? `<span class="badge bgx">${i.content_type}</span>` : ''}
+        ${i.brief ? `<div class="ss tm" style="margin-top:8px">${i.brief}</div>` : ''}
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="es"><i class="fas fa-lightbulb"></i><p>Erreur de chargement.</p></div>';
+  }
+}
+
+async function psGenerateIdea() {
+  const title = document.getElementById('idea-title').value.trim();
+  const platform = document.getElementById('idea-platform').value;
+  const content_type = document.getElementById('idea-type').value;
+  const brief = document.getElementById('idea-brief').value.trim();
+  if (!title) { toast('Entrez un titre / sujet', 'err'); return; }
+  toast('Génération IA en cours...', 'inf');
+  try {
+    await api('/api/studio/content-ideas/generate', { method: 'POST', body: JSON.stringify({ title, platform, content_type, brief }) });
+    toast('Idée générée !', 'ok');
+    closeModal('modal-gen-idea');
+    document.getElementById('idea-title').value = '';
+    document.getElementById('idea-brief').value = '';
+    await psFetchIdeas();
+    psTab('ideas');
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function psFetchAB() {
+  const el = document.getElementById('ps-ab-list');
+  try {
+    const data = await api('/api/studio/experiments');
+    if (!data.length) {
+      el.innerHTML = '<div class="es"><i class="fas fa-flask"></i><p>Aucun test A/B en cours.</p></div>';
+      return;
+    }
+    const statusBadge = s => s === 'running' ? '<span class="badge bgg">En cours</span>' : s === 'done' ? '<span class="badge bgc">Terminé</span>' : '<span class="badge bgx">Draft</span>';
+    el.innerHTML = data.map(e => `
+      <div class="card">
+        <div class="ch">
+          <span class="ct">${e.name || e.title || 'Expérience'}</span>
+          ${statusBadge(e.status)}
+        </div>
+        <div class="g2" style="gap:10px;margin-top:10px">
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:10px">
+            <div style="font-size:9px;color:var(--cyan);letter-spacing:1px;margin-bottom:4px">VARIANTE A</div>
+            <div class="tsm">${e.variant_a || '—'}</div>
+            ${e.result_a !== undefined ? `<div class="tsm tm" style="margin-top:4px">Résultat: <strong style="color:var(--green)">${e.result_a}</strong></div>` : ''}
+          </div>
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:10px">
+            <div style="font-size:9px;color:var(--purple2);letter-spacing:1px;margin-bottom:4px">VARIANTE B</div>
+            <div class="tsm">${e.variant_b || '—'}</div>
+            ${e.result_b !== undefined ? `<div class="tsm tm" style="margin-top:4px">Résultat: <strong style="color:var(--green)">${e.result_b}</strong></div>` : ''}
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="es"><i class="fas fa-flask"></i><p>Erreur de chargement.</p></div>';
+  }
+}
+
+async function psFetchOpps() {
+  const el = document.getElementById('ps-opps-list');
+  try {
+    const data = await api('/api/studio/opportunities');
+    if (!data.length) {
+      el.innerHTML = '<div class="es"><i class="fas fa-star"></i><p>Aucune opportunité. Lancez un scan IA !</p></div>';
+      return;
+    }
+    const prio = p => p === 'high' ? '<span class="badge bgr">Haute</span>' : p === 'medium' ? '<span class="badge bgc">Moyenne</span>' : '<span class="badge bgx">Basse</span>';
+    el.innerHTML = data.map(o => `
+      <div class="card gg">
+        <div class="ch">
+          <div style="font-size:13px;font-weight:600">${o.title || o.name || 'Opportunité'}</div>
+          <span class="badge bgg">Score: ${o.score ?? '—'}</span>
+        </div>
+        ${o.priority ? `<div style="margin-bottom:6px">${prio(o.priority)}</div>` : ''}
+        ${o.description ? `<div class="ss tm" style="margin-bottom:8px">${o.description}</div>` : ''}
+        ${o.estimated_revenue !== undefined ? `<div class="flex jsb tsm"><span class="tm">Revenu estimé</span><span style="color:var(--green);font-weight:600">${fmt(o.estimated_revenue)}</span></div>` : ''}
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="es"><i class="fas fa-star"></i><p>Erreur de chargement.</p></div>';
+  }
+}
+
+async function psScanOpps() {
+  toast('Scan IA en cours...', 'inf');
+  try {
+    await api('/api/studio/opportunities/ai-scan', { method: 'POST' });
+    toast('Opportunités analysées !', 'ok');
+    await psFetchOpps();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ─── ITEM 4 — Import CSV bancaire (fonction améliorée) ───────────────────────
+// La modale modal-import-csv et le bouton existent déjà dans le HTML
+// La fonction importCSV() existante est remplacée ci-dessous par une version
+// compatible avec les deux IDs (csv-acct existant et csv-account-id mentionné)
+// Note: on garde l'existant et on ajoute un alias pour csv-account-id
+function getCsvAccountId() {
+  const el1 = document.getElementById('csv-account-id');
+  const el2 = document.getElementById('csv-acct');
+  return (el1 && el1.value) || (el2 && el2.value) || '';
+}
+
+// ─── ITEM 5 — Sync Gumroad / Lemon Squeezy ──────────────────────────────────
+async function syncProduct(id, platform) {
+  try {
+    toast('Synchronisation...', 'inf');
+    await api(`/api/products/${id}/sync/${platform}`, { method: 'POST' });
+    toast('Produit synchronisé', 'ok');
+    loadProductsPage();
+  } catch(e) { toast(e.message, 'err'); }
 }
 </script>
 </body>

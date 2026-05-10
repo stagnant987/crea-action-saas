@@ -1,10 +1,13 @@
 """CRÉA-ACTION — Point d'entrée FastAPI (v2 — avec IA + 13 plateformes)"""
+import asyncio
+from datetime import datetime, timedelta
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 import os
 
+import config
 from database import init_db
 from routers import (
     auth_youtube, auth_meta, auth_tiktok,
@@ -85,9 +88,45 @@ app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 def serve_frontend():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
+async def _auto_sync_loop():
+    """Rafraîchit les tokens YouTube expirés toutes les heures."""
+    await asyncio.sleep(60)  # Attend 1 min après démarrage
+    while True:
+        try:
+            from database import SessionLocal
+            from models import YouTubeAccount
+            import httpx
+            db = SessionLocal()
+            expiry_threshold = datetime.utcnow() + timedelta(minutes=10)
+            accounts = db.query(YouTubeAccount).filter(
+                YouTubeAccount.token_expiry < expiry_threshold,
+                YouTubeAccount.refresh_token != ""
+            ).all()
+            for acc in accounts:
+                try:
+                    resp = httpx.post(config.GOOGLE_TOKEN_URL, data={
+                        "client_id": config.GOOGLE_CLIENT_ID,
+                        "client_secret": config.GOOGLE_CLIENT_SECRET,
+                        "refresh_token": acc.refresh_token,
+                        "grant_type": "refresh_token",
+                    })
+                    if resp.status_code == 200:
+                        tokens = resp.json()
+                        acc.access_token = tokens["access_token"]
+                        acc.token_expiry = datetime.utcnow() + timedelta(seconds=tokens.get("expires_in", 3600))
+                        db.commit()
+                except Exception:
+                    pass
+            db.close()
+        except Exception:
+            pass
+        await asyncio.sleep(3600)  # Toutes les heures
+
+
 @app.on_event("startup")
-def on_startup():
+async def on_startup():
     init_db()
+    asyncio.create_task(_auto_sync_loop())
     print("\n" + "-" * 60)
     print("  CREA-ACTION v3  ->  http://localhost:8000")
     print("  PLATEAU STUDIO | IA Claude | 13 plateformes")
