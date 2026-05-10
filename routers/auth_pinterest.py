@@ -2,19 +2,22 @@
 import secrets, base64, httpx
 from datetime import datetime
 from urllib.parse import urlencode
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 import config
 from database import get_db
 from models import PinterestAccount, User
-from routers.auth_users import get_current_user
+from routers.auth_users import get_current_user, get_user_from_token_str
 
 router = APIRouter()
 _states: dict[str, int] = {}
 
 @router.get("/login")
-def pinterest_login(current_user: User = Depends(get_current_user)):
+def pinterest_login(t: str = Query(default=None), db: Session = Depends(get_db)):
+    if not t:
+        raise HTTPException(status_code=401, detail="Token manquant — utilisez le bouton Connecter depuis le dashboard")
+    current_user = get_user_from_token_str(t, db)
     if not config.PINTEREST_APP_ID:
         return RedirectResponse("https://developers.pinterest.com/apps/")
     state = secrets.token_urlsafe(16)

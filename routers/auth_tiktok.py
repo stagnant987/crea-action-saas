@@ -9,14 +9,14 @@ import httpx
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 import config
 from database import get_db
 from models import TikTokAccount, User
-from routers.auth_users import get_current_user
+from routers.auth_users import get_current_user, get_user_from_token_str
 
 router = APIRouter()
 _oauth_states: dict[str, int] = {}
@@ -33,8 +33,11 @@ def _make_code_challenge(verifier: str) -> str:
 
 
 @router.get("/login")
-def tiktok_login(current_user: User = Depends(get_current_user)):
+def tiktok_login(t: str = Query(default=None), db: Session = Depends(get_db)):
     """Démarre le flux OAuth TikTok avec PKCE."""
+    if not t:
+        raise HTTPException(status_code=401, detail="Token manquant — utilisez le bouton Connecter depuis le dashboard")
+    current_user = get_user_from_token_str(t, db)
     if not config.TIKTOK_CLIENT_KEY:
         return RedirectResponse("https://developers.tiktok.com/apps/")
 

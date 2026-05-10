@@ -675,9 +675,9 @@ tbody td{padding:9px 11px}
       <div style="margin-bottom:24px">
         <div style="font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px">Connexions OAuth</div>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <a href="/auth/youtube/login"   class="btn bp bfull"><i class="fab fa-youtube"></i> Connecter YouTube</a>
-          <a href="/auth/meta/login"      class="btn bpu bfull"><i class="fab fa-meta"></i> Connecter Instagram + Facebook</a>
-          <a href="/auth/tiktok/login"    class="btn bg_ bfull"><i class="fab fa-tiktok"></i> Connecter TikTok</a>
+          <a id="lnk-yt"  class="btn bp bfull"  onclick="location.href=oauthUrl('/auth/youtube/login')"  href="#"><i class="fab fa-youtube"></i> Connecter YouTube</a>
+          <a id="lnk-meta" class="btn bpu bfull" onclick="location.href=oauthUrl('/auth/meta/login')"     href="#"><i class="fab fa-meta"></i> Connecter Instagram + Facebook</a>
+          <a id="lnk-tt"  class="btn bg_ bfull"  onclick="location.href=oauthUrl('/auth/tiktok/login')"  href="#"><i class="fab fa-tiktok"></i> Connecter TikTok</a>
           <a href="/auth/snapchat/login"  class="btn bg_ bfull"><i class="fab fa-snapchat" style="color:#fffc00"></i> Connecter Snapchat</a>
           <a href="/auth/pinterest/login" class="btn bg_ bfull"><i class="fab fa-pinterest" style="color:#e60023"></i> Connecter Pinterest</a>
           <a href="/auth/twitch/login"    class="btn bg_ bfull"><i class="fab fa-twitch" style="color:#a970ff"></i> Connecter Twitch</a>
@@ -1153,7 +1153,7 @@ function renderWidgets(s) {
         ${p.lbl2 ? `<div class="pws-i"><div class="pws-l">${p.lbl2}</div><div class="pws-v">${p.views}</div></div>` : '<div></div>'}
       </div>
       ${p.rev !== null ? `<div style="margin-bottom:10px"><div class="flex jsb tsm" style="margin-bottom:4px"><span class="tm">Revenu</span><span style="color:var(--green);font-weight:600">${fmt(p.rev)}</span></div><div class="pbar"><div class="pfill ${p.fill}" style="width:${Math.min(p.rev/50,100)}%"></div></div></div>` : ''}
-      ${!p.con ? `<a href="${p.url}" class="btn bg_ bsm bfull" onclick="event.stopPropagation()"><i class="fas fa-plug"></i> Connecter</a>` : ''}
+      ${!p.con ? `<a href="${oauthUrl(p.url)}" class="btn bg_ bsm bfull" onclick="event.stopPropagation()"><i class="fas fa-plug"></i> Connecter</a>` : ''}
     </div>
   `).join('');
 }
@@ -1392,8 +1392,13 @@ async function loadPlatformPage(key, endpoint, nameField, revField, connectUrl, 
   } catch(e) { el.innerHTML = `<div class="es"><p>Erreur: ${e.message}</p></div>`; }
 }
 
+function oauthUrl(path) {
+  return `${path}?t=${encodeURIComponent(authGetToken() || '')}`;
+}
+
 function connectCard(name, url) {
-  return `<div class="cc" onclick="location.href='${url}'"><i class="fas fa-plug"></i><div class="lbl">Aucun compte ${name} connecté</div><a href="${url}" class="btn bp"><i class="fas fa-plug"></i> Connecter ${name}</a></div>`;
+  const full = oauthUrl(url);
+  return `<div class="cc" onclick="location.href='${full}'"><i class="fas fa-plug"></i><div class="lbl">Aucun compte ${name} connecté</div><a href="${full}" class="btn bp"><i class="fas fa-plug"></i> Connecter ${name}</a></div>`;
 }
 
 async function loadFBPage() {

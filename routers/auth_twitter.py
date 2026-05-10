@@ -2,13 +2,13 @@
 import secrets, hashlib, base64, httpx
 from datetime import datetime
 from urllib.parse import urlencode
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 import config
 from database import get_db
 from models import TwitterAccount, User
-from routers.auth_users import get_current_user
+from routers.auth_users import get_current_user, get_user_from_token_str
 
 router = APIRouter()
 _states: dict[str, int] = {}
@@ -18,7 +18,10 @@ def _verifier(): return secrets.token_urlsafe(64)
 def _challenge(v): return base64.urlsafe_b64encode(hashlib.sha256(v.encode()).digest()).rstrip(b"=").decode()
 
 @router.get("/login")
-def twitter_login(current_user: User = Depends(get_current_user)):
+def twitter_login(t: str = Query(default=None), db: Session = Depends(get_db)):
+    if not t:
+        raise HTTPException(status_code=401, detail="Token manquant — utilisez le bouton Connecter depuis le dashboard")
+    current_user = get_user_from_token_str(t, db)
     if not config.TWITTER_CLIENT_ID:
         return RedirectResponse("https://developer.twitter.com/en/portal/dashboard")
     state = secrets.token_urlsafe(16)
