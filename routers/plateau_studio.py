@@ -11,7 +11,8 @@ from datetime import datetime
 from typing import List, Optional
 
 import anthropic
-from fastapi import APIRouter, Depends, HTTPException
+import httpx
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -649,6 +650,59 @@ def get_studio_stats(current_user: User = Depends(get_current_user), db: Session
         "best_trend":  {"niche": best_trend.niche, "score": best_trend.score} if best_trend else None,
         "best_opportunity": {"title": best_opp.title, "revenue": best_opp.revenue_estimate} if best_opp else None,
     }
+
+
+# ── Publication plateformes ───────────────────────────────────────────────────
+
+@router.post("/publish/youtube")
+async def publish_youtube(
+    file: UploadFile = File(...),
+    title: str = Form("Vidéo CRÉA-ACTION"),
+    description: str = Form("Généré avec CRÉA-ACTION"),
+    privacy: str = Form("public"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    account = db.query(YouTubeAccount).filter_by(user_id=current_user.id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Compte YouTube non connecté. Connecte YouTube depuis la sidebar.")
+
+    video_data = await file.read()
+    headers = {"Authorization": f"Bearer {account.access_token}"}
+
+    # Initier un upload resumable
+    metadata = {
+        "snippet": {"title": title, "description": description, "categoryId": "22"},
+        "status": {"privacyStatus": privacy},
+    }
+    init_resp = httpx.post(
+        "https://www.googleapis.com/upload/youtube/v3/videos",
+        params={"uploadType": "resumable", "part": "snippet,status"},
+        headers={**headers, "Content-Type": "application/json", "X-Upload-Content-Type": "video/webm"},
+        json=metadata,
+        timeout=30,
+    )
+    if init_resp.status_code not in (200, 201):
+        detail = init_resp.json().get("error", {}).get("message", init_resp.text)
+        raise HTTPException(status_code=400, detail=f"Erreur YouTube: {detail}")
+
+    upload_url = init_resp.headers.get("Location")
+    if not upload_url:
+        raise HTTPException(status_code=500, detail="URL d'upload YouTube manquante")
+
+    # Upload du fichier vidéo
+    upload_resp = httpx.put(
+        upload_url,
+        content=video_data,
+        headers={"Content-Type": "video/webm", "Content-Length": str(len(video_data))},
+        timeout=300,
+    )
+    if upload_resp.status_code not in (200, 201):
+        detail = upload_resp.json().get("error", {}).get("message", upload_resp.text)
+        raise HTTPException(status_code=400, detail=f"Upload échoué: {detail}")
+
+    video_id = upload_resp.json().get("id", "")
+    return {"status": "published", "video_id": video_id, "url": f"https://youtu.be/{video_id}"}
 
 
 # ── Utilitaire ────────────────────────────────────────────────────────────────

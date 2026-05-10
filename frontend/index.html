@@ -226,6 +226,24 @@ tbody td{padding:9px 11px}
 /* ─ Divider ─ */
 .div{height:1px;background:var(--border);margin:16px 0}
 .mb16{margin-bottom:16px}.mb20{margin-bottom:20px}.mb24{margin-bottom:24px}
+/* ─ Video Generator ─ */
+.vs-mode-tabs{display:flex;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:3px}
+.vs-mtab{background:transparent;border:none;border-radius:6px;color:var(--text2);padding:5px 14px;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.vs-mtab.active{background:linear-gradient(135deg,var(--purple),var(--purple2));color:#fff;box-shadow:0 2px 12px rgba(124,58,237,.4)}
+.vg-layout{display:flex;height:100%;overflow:hidden}
+.vg-opts{width:280px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+.vg-preview{flex:1;background:#000;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.vg-preview canvas{max-width:100%;max-height:100%;object-fit:contain}
+.vg-status-msg{position:absolute;color:var(--text3);font-size:13px;text-align:center;line-height:2;pointer-events:none}
+.vg-field{margin-bottom:12px}
+.vg-label{display:block;font-size:10px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.vg-sec-title{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--purple2);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.vg-pub-btn{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 12px;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.vg-pub-btn:hover{border-color:var(--border2);background:var(--card)}
+.vg-pub-btn.yt{border-color:rgba(255,68,68,.3);color:#ff6666}
+.vg-pub-btn.yt:hover{background:rgba(255,68,68,.1);border-color:#ff4444}
+.vg-pub-btn.tt{color:var(--text2)}
+.vg-pub-btn.ig{color:#e1306c}
 .ps-launcher{background:linear-gradient(135deg,rgba(124,58,237,.07),rgba(0,200,255,.04));border:1px solid rgba(124,58,237,.25);border-radius:var(--radius);padding:18px;margin-top:24px}
 .ps-launcher-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
 .ps-plat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
@@ -797,49 +815,127 @@ tbody td{padding:9px 11px}
 <div class="page" id="page-video-studio">
   <div class="vs-top">
     <div class="vs-title">STUDIO VIDÉO</div>
+    <div class="vs-mode-tabs">
+      <button class="vs-mtab active" id="vstab-edit" onclick="vsMode('edit')"><i class="fas fa-cut"></i> Éditer</button>
+      <button class="vs-mtab" id="vstab-gen" onclick="vsMode('gen')"><i class="fas fa-magic"></i> Générer</button>
+    </div>
     <button class="vs-expbtn" id="vs-expbtn" disabled onclick="vsExport()"><i class="fas fa-download"></i> Exporter</button>
   </div>
-  <div class="vs-body">
-    <div class="vs-canvas-zone" id="vs-drop" onclick="vsImport()">
-      <canvas id="vs-cv" width="1280" height="720"></canvas>
-      <div class="vs-hint" id="vs-hint">
-        <i class="fas fa-video"></i>
-        <p>IMPORTER UNE VIDÉO<br><span style="font-size:9px;opacity:.5">glisser-déposer ou cliquer</span></p>
+
+  <!-- ── Mode Édition ── -->
+  <div id="vs-edit-zone" style="display:contents">
+    <div class="vs-body">
+      <div class="vs-canvas-zone" id="vs-drop" onclick="vsImport()">
+        <canvas id="vs-cv" width="1280" height="720"></canvas>
+        <div class="vs-hint" id="vs-hint">
+          <i class="fas fa-video"></i>
+          <p>IMPORTER UNE VIDÉO<br><span style="font-size:9px;opacity:.5">glisser-déposer ou cliquer</span></p>
+        </div>
+      </div>
+      <div class="vs-panel" id="vs-panel">
+        <div class="vs-pempty">Importez une<br>vidéo pour<br>commencer</div>
       </div>
     </div>
-    <div class="vs-panel" id="vs-panel">
-      <div class="vs-pempty">Importez une<br>vidéo pour<br>commencer</div>
-      <!-- Plateformes téléportées depuis Plateau Studio -->
-      <div id="vs-ai-zone" style="display:none;padding:14px;border-top:1px solid var(--border);margin-top:auto">
-        <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--purple2);margin-bottom:10px"><i class="fas fa-satellite-dish"></i> PLATEFORMES REÇUES</div>
-        <div id="vs-plat-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
-        <div style="font-size:10px;color:var(--text2);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase">Sujet (optionnel)</div>
-        <input class="fi" id="vs-topic" placeholder="Ex: Monétisation, Gaming..." style="margin-bottom:10px;font-size:12px">
-        <button class="btn bai" style="width:100%" onclick="vsAIGenerate()"><i class="fas fa-magic"></i> Générer aléatoirement avec IA</button>
-        <div id="vs-ai-result" style="margin-top:12px;font-size:12px;line-height:1.6;color:var(--text);display:none"></div>
+    <div class="vs-bottom">
+      <div class="vs-tools">
+        <button class="vs-tool" id="vst-import" onclick="vsImport();event.stopPropagation()"><i class="fas fa-folder-open"></i> Importer</button>
+        <button class="vs-tool" id="vst-text"   onclick="vsSetTool('text')"   disabled><i class="fas fa-font"></i> Texte</button>
+        <button class="vs-tool" id="vst-filter" onclick="vsSetTool('filter')" disabled><i class="fas fa-magic"></i> Effets</button>
+        <button class="vs-tool" id="vst-trim"   onclick="vsSetTool('trim')"   disabled><i class="fas fa-cut"></i> Rogner</button>
       </div>
-    </div>
-  </div>
-  <div class="vs-bottom">
-    <div class="vs-tools">
-      <button class="vs-tool" id="vst-import" onclick="vsImport();event.stopPropagation()"><i class="fas fa-folder-open"></i> Importer</button>
-      <button class="vs-tool" id="vst-text"   onclick="vsSetTool('text')"   disabled><i class="fas fa-font"></i> Texte</button>
-      <button class="vs-tool" id="vst-filter" onclick="vsSetTool('filter')" disabled><i class="fas fa-magic"></i> Effets</button>
-      <button class="vs-tool" id="vst-trim"   onclick="vsSetTool('trim')"   disabled><i class="fas fa-cut"></i> Rogner</button>
-    </div>
-    <div class="vs-timeline" id="vs-tl" style="display:none">
-      <button class="vs-play" id="vs-play" onclick="vsPlay()"><i class="fas fa-play"></i></button>
-      <span class="vs-time"><span id="vs-cur">0:00</span> / <span id="vs-dur">0:00</span></span>
-      <div class="vs-bar" id="vs-bar">
-        <div class="vs-bar-bg"></div>
-        <div class="vs-bar-sel" id="vs-bsel"></div>
-        <div class="vs-bar-fill" id="vs-bfill" style="width:0%"></div>
-        <div class="vs-handle vts" id="vs-hts" style="left:0%"></div>
-        <div class="vs-handle vte" id="vs-hte" style="left:100%"></div>
-        <div class="vs-handle vc"  id="vs-hc"  style="left:0%"></div>
+      <div class="vs-timeline" id="vs-tl" style="display:none">
+        <button class="vs-play" id="vs-play" onclick="vsPlay()"><i class="fas fa-play"></i></button>
+        <span class="vs-time"><span id="vs-cur">0:00</span> / <span id="vs-dur">0:00</span></span>
+        <div class="vs-bar" id="vs-bar">
+          <div class="vs-bar-bg"></div>
+          <div class="vs-bar-sel" id="vs-bsel"></div>
+          <div class="vs-bar-fill" id="vs-bfill" style="width:0%"></div>
+          <div class="vs-handle vts" id="vs-hts" style="left:0%"></div>
+          <div class="vs-handle vte" id="vs-hte" style="left:100%"></div>
+          <div class="vs-handle vc"  id="vs-hc"  style="left:0%"></div>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- ── Mode Génération ── -->
+  <div id="vs-gen-zone" style="display:none;flex:1;overflow:hidden;min-height:0">
+    <div class="vg-layout">
+      <!-- Options à gauche -->
+      <div class="vg-opts">
+        <div class="vg-sec-title"><i class="fas fa-sliders-h"></i> PARAMÈTRES</div>
+
+        <div id="vg-teleport-plats" style="display:none;margin-bottom:16px">
+          <div style="font-size:10px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px"><i class="fas fa-satellite-dish" style="color:var(--purple2)"></i> Plateformes cibles</div>
+          <div id="vg-plat-tags" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+        </div>
+
+        <div class="vg-field">
+          <label class="vg-label">Titre de la vidéo</label>
+          <input class="fi" id="vg-title" placeholder="Mon contenu créatif..." value="CRÉA-ACTION">
+        </div>
+        <div class="vg-field">
+          <label class="vg-label">Thème visuel</label>
+          <select class="fsel" id="vg-theme">
+            <option value="cyberpunk">⚡ Cyberpunk Néon</option>
+            <option value="lofi">☕ Lofi Chill</option>
+            <option value="fire">🔥 Fire Energy</option>
+            <option value="nature">🌿 Nature Zen</option>
+            <option value="minimal">◾ Minimal Dark</option>
+          </select>
+        </div>
+        <div class="vg-field">
+          <label class="vg-label">Ambiance sonore</label>
+          <select class="fsel" id="vg-sound">
+            <option value="lofi">☕ Lofi Beats</option>
+            <option value="electronic">⚡ Electronic</option>
+            <option value="hiphop">🎤 Hip-Hop Beat</option>
+            <option value="ambient">🌙 Ambient</option>
+          </select>
+        </div>
+        <div class="vg-field">
+          <label class="vg-label">Durée</label>
+          <select class="fsel" id="vg-duration">
+            <option value="15">15 secondes</option>
+            <option value="30" selected>30 secondes</option>
+            <option value="60">60 secondes</option>
+          </select>
+        </div>
+
+        <button class="btn bai" style="width:100%;margin-bottom:14px" id="vg-btn" onclick="vsStartGen()">
+          <i class="fas fa-magic"></i> GÉNÉRER LA VIDÉO
+        </button>
+
+        <!-- Barre de progression -->
+        <div id="vg-prog-wrap" style="display:none;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:5px">
+            <span id="vg-prog-lbl">Enregistrement...</span>
+            <span id="vg-prog-pct">0%</span>
+          </div>
+          <div style="background:var(--border);border-radius:4px;height:6px">
+            <div id="vg-prog-bar" style="background:linear-gradient(90deg,var(--purple2),var(--cyan));height:6px;border-radius:4px;width:0%;transition:width .3s"></div>
+          </div>
+        </div>
+
+        <!-- Zone de publication -->
+        <div id="vg-pub-zone" style="display:none">
+          <div class="vg-sec-title" style="margin-bottom:12px"><i class="fas fa-paper-plane"></i> PUBLIER</div>
+          <button class="vg-pub-btn" id="vg-dl-btn"><i class="fas fa-download"></i> Télécharger (.webm)</button>
+          <button class="vg-pub-btn yt" id="vg-pub-yt" onclick="vsPublishYT()"><i class="fab fa-youtube"></i> Publier sur YouTube</button>
+          <button class="vg-pub-btn tt" onclick="vsPublishSoon('TikTok')"><i class="fab fa-tiktok"></i> TikTok <span class="badge bgx" style="font-size:9px">Bientôt</span></button>
+          <button class="vg-pub-btn ig" onclick="vsPublishSoon('Instagram')"><i class="fab fa-instagram"></i> Instagram <span class="badge bgx" style="font-size:9px">Bientôt</span></button>
+          <div id="vg-pub-status" style="font-size:11px;color:var(--text2);margin-top:8px;line-height:1.5"></div>
+        </div>
+      </div>
+
+      <!-- Aperçu canvas à droite -->
+      <div class="vg-preview">
+        <canvas id="vs-gen-cv" width="1280" height="720"></canvas>
+        <div id="vg-status" class="vg-status-msg"><i class="fas fa-magic"></i><br>Configure et clique sur GÉNÉRER</div>
+      </div>
+    </div>
+  </div>
+
   <input type="file" id="vs-file" accept="video/*" style="display:none" onchange="vsLoad(this)">
   <video id="vs-vid" style="display:none" preload="metadata"></video>
   <div class="vs-modal" id="vs-modal">
@@ -1798,40 +1894,335 @@ const VS = {
 };
 
 function vsInit() {
-  if (!VS.loaded) {} // just re-enter, no reset
-  vsLoadTeleported();
+  if (!VS.loaded) {}
+  vsCheckTeleported();
 }
 
-function vsLoadTeleported() {
-  const raw = localStorage.getItem('vs_platforms');
-  const zone = document.getElementById('vs-ai-zone');
-  const tags = document.getElementById('vs-plat-tags');
-  if (!raw || !zone || !tags) return;
-  const platforms = JSON.parse(raw);
-  if (!platforms.length) return;
-  tags.innerHTML = platforms.map(p =>
-    `<div class="vs-plat-tag"><i class="${p.icon}" style="color:${p.color}"></i>${p.label}</div>`
-  ).join('');
-  zone.style.display = 'block';
+function vsMode(mode) {
+  const isGen = mode === 'gen';
+  document.getElementById('vs-edit-zone').style.display = isGen ? 'none' : 'contents';
+  document.getElementById('vs-gen-zone').style.display = isGen ? 'flex' : 'none';
+  document.getElementById('vs-expbtn').style.display = isGen ? 'none' : '';
+  document.getElementById('vstab-edit').classList.toggle('active', !isGen);
+  document.getElementById('vstab-gen').classList.toggle('active', isGen);
+  if (isGen) vsCheckTeleported();
 }
 
-async function vsAIGenerate() {
+function vsCheckTeleported() {
   const raw = localStorage.getItem('vs_platforms');
   if (!raw) return;
-  const platforms = JSON.parse(raw);
-  const topic = document.getElementById('vs-topic').value.trim();
-  const platNames = platforms.map(p => p.label).join(', ');
-  const prompt = `Génère aléatoirement une idée de vidéo créative pour les plateformes : ${platNames}.${topic ? ` Sujet : ${topic}.` : ''}\n\nDonne :\n1. 🎬 Titre accrocheur\n2. 📋 Concept en 2 phrases\n3. 🎯 Format idéal pour chaque plateforme\n4. ⚡ Hook d'ouverture (10 secondes)\n5. 🏷️ 5 hashtags`;
-  const btn = document.querySelector('#vs-ai-zone .btn');
-  const result = document.getElementById('vs-ai-result');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération...'; }
-  result.style.display = 'none';
   try {
-    const res = await api('/api/ai/chat', { method: 'POST', body: JSON.stringify({ message: prompt, history: [] }) });
-    result.innerHTML = res.response.replace(/\n/g, '<br>');
-    result.style.display = 'block';
-  } catch(e) { toast('Erreur IA: ' + e.message, 'err'); }
-  finally { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-magic"></i> Générer aléatoirement avec IA'; } }
+    const platforms = JSON.parse(raw);
+    if (!platforms.length) return;
+    const wrap = document.getElementById('vg-teleport-plats');
+    const tags = document.getElementById('vg-plat-tags');
+    if (!wrap || !tags) return;
+    tags.innerHTML = platforms.map(p =>
+      `<div class="vs-plat-tag"><i class="${p.icon}" style="color:${p.color}"></i>${p.label}</div>`
+    ).join('');
+    wrap.style.display = 'block';
+    // Pré-remplir le titre avec la première plateforme
+    const titleEl = document.getElementById('vg-title');
+    if (titleEl && titleEl.value === 'CRÉA-ACTION') {
+      titleEl.value = platforms.map(p => p.label).join(' + ');
+    }
+  } catch(e) {}
+}
+
+// ─── MOTEUR DE GÉNÉRATION VIDÉO ──────────────────────────────────────────────
+const VG = { recording: false, recorder: null, chunks: [], blob: null, audioCtx: null, animFrame: null };
+
+const VG_THEMES = {
+  cyberpunk: { bg: ['#080818','#0d0d2b','#1a0040'], accent: '#00c8ff', accent2: '#ff0080', particles: 70, grid: true },
+  lofi:      { bg: ['#1a0e2e','#2d1b4e','#3d2a1e'], accent: '#ffd600', accent2: '#ff8c00', particles: 35, grid: false },
+  fire:      { bg: ['#1a0500','#3d0e00','#5c1a00'], accent: '#ff6600', accent2: '#ffcc00', particles: 90, grid: false },
+  nature:    { bg: ['#031a0d','#062e1a','#0a3d26'], accent: '#00e676', accent2: '#00bcd4', particles: 50, grid: false },
+  minimal:   { bg: ['#080810','#0f0f1e','#13132a'], accent: '#7c3aed', accent2: '#a855f7', particles: 20, grid: true },
+};
+
+function vsStartGen() {
+  if (VG.recording) return;
+  const title = document.getElementById('vg-title').value.trim() || 'CRÉA-ACTION';
+  const themeKey = document.getElementById('vg-theme').value;
+  const soundStyle = document.getElementById('vg-sound').value;
+  const duration = parseInt(document.getElementById('vg-duration').value);
+  const cv = document.getElementById('vs-gen-cv');
+  cv.width = 1280; cv.height = 720;
+
+  document.getElementById('vg-btn').disabled = true;
+  document.getElementById('vg-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération...';
+  document.getElementById('vg-pub-zone').style.display = 'none';
+  document.getElementById('vg-status').style.display = 'none';
+  document.getElementById('vg-prog-wrap').style.display = 'block';
+  document.getElementById('vg-prog-bar').style.width = '0%';
+  document.getElementById('vg-prog-pct').textContent = '0%';
+  document.getElementById('vg-prog-lbl').textContent = 'Initialisation...';
+
+  // Audio
+  VG.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const audioDest = VG.audioCtx.createMediaStreamDestination();
+  vgMakeAudio(soundStyle, duration, audioDest);
+
+  // Canvas stream + audio stream
+  const canvasStream = cv.captureStream(30);
+  const combined = new MediaStream([
+    ...canvasStream.getVideoTracks(),
+    ...audioDest.stream.getAudioTracks(),
+  ]);
+
+  VG.chunks = [];
+  VG.recording = true;
+  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+    ? 'video/webm;codecs=vp9,opus' : 'video/webm';
+  VG.recorder = new MediaRecorder(combined, { mimeType });
+  VG.recorder.ondataavailable = e => { if (e.data.size > 0) VG.chunks.push(e.data); };
+  VG.recorder.onstop = () => {
+    VG.blob = new Blob(VG.chunks, { type: 'video/webm' });
+    VG.recording = false;
+    if (VG.animFrame) cancelAnimationFrame(VG.animFrame);
+    document.getElementById('vg-btn').disabled = false;
+    document.getElementById('vg-btn').innerHTML = '<i class="fas fa-redo"></i> Régénérer';
+    document.getElementById('vg-prog-lbl').textContent = '✅ Vidéo prête !';
+    document.getElementById('vg-prog-bar').style.width = '100%';
+    document.getElementById('vg-prog-pct').textContent = '100%';
+    document.getElementById('vg-pub-zone').style.display = 'block';
+    document.getElementById('vg-pub-status').textContent = '';
+    document.getElementById('vg-pub-yt').disabled = false;
+    document.getElementById('vg-pub-yt').innerHTML = '<i class="fab fa-youtube"></i> Publier sur YouTube';
+    document.getElementById('vg-dl-btn').onclick = () => {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(VG.blob);
+      a.download = `${title.replace(/\s+/g,'_')}_${Date.now()}.webm`; a.click();
+    };
+    toast('Vidéo générée ! 🎬', 'ok');
+  };
+  VG.recorder.start(200);
+
+  // Animation canvas
+  vgDrawLoop(cv, cv.getContext('2d'), themeKey, title, duration, Date.now());
+
+  // Barre de progression
+  const progStart = Date.now();
+  const progTick = () => {
+    const elapsed = (Date.now() - progStart) / 1000;
+    const pct = Math.min(99, (elapsed / duration) * 100);
+    document.getElementById('vg-prog-bar').style.width = pct + '%';
+    document.getElementById('vg-prog-pct').textContent = Math.round(pct) + '%';
+    document.getElementById('vg-prog-lbl').textContent = `Enregistrement... ${Math.ceil(duration - elapsed)}s`;
+    if (elapsed < duration) requestAnimationFrame(progTick);
+  };
+  requestAnimationFrame(progTick);
+
+  // Arrêt automatique
+  setTimeout(() => {
+    if (VG.animFrame) cancelAnimationFrame(VG.animFrame);
+    if (VG.recorder?.state === 'recording') VG.recorder.stop();
+    if (VG.audioCtx?.state !== 'closed') VG.audioCtx.close();
+  }, (duration + 0.8) * 1000);
+}
+
+function vgDrawLoop(cv, ctx, themeKey, title, duration, t0) {
+  const theme = VG_THEMES[themeKey] || VG_THEMES.cyberpunk;
+  const particles = Array.from({length: theme.particles}, () => ({
+    x: Math.random() * cv.width, y: Math.random() * cv.height,
+    r: Math.random() * 3 + 1,
+    vx: (Math.random() - .5) * 1.4, vy: (Math.random() - .5) * 1.4,
+    a: Math.random() * .7 + .2,
+  }));
+
+  function draw() {
+    const elapsed = (Date.now() - t0) / 1000;
+    const progress = Math.min(1, elapsed / duration);
+
+    // Fond dégradé animé
+    const grad = ctx.createLinearGradient(
+      cv.width * (.5 + .5 * Math.sin(elapsed * .3)),
+      0,
+      cv.width * (.5 + .5 * Math.cos(elapsed * .25)),
+      cv.height
+    );
+    grad.addColorStop(0, theme.bg[0]);
+    grad.addColorStop(.5, theme.bg[1]);
+    grad.addColorStop(1, theme.bg[2]);
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, cv.width, cv.height);
+
+    // Grille cyberpunk
+    if (theme.grid) {
+      ctx.strokeStyle = theme.accent + '18'; ctx.lineWidth = 1;
+      for (let x = 0; x < cv.width; x += 80) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,cv.height); ctx.stroke(); }
+      for (let y = 0; y < cv.height; y += 80) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(cv.width,y); ctx.stroke(); }
+    }
+
+    // Cercles pulsants
+    const pulse = Math.sin(elapsed * Math.PI * 2) * .25 + .75;
+    const pulse2 = Math.sin(elapsed * Math.PI * 1.3 + 1) * .2 + .8;
+    [200 * pulse, 280 * pulse2, 350 * pulse].forEach((r, i) => {
+      ctx.beginPath(); ctx.arc(cv.width/2, cv.height/2, r, 0, Math.PI*2);
+      ctx.strokeStyle = (i % 2 === 0 ? theme.accent : theme.accent2) + '35';
+      ctx.lineWidth = i === 0 ? 2 : 1; ctx.stroke();
+    });
+
+    // Particules
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > cv.width) p.vx *= -1;
+      if (p.y < 0 || p.y > cv.height) p.vy *= -1;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = theme.accent + Math.floor(p.a * 200).toString(16).padStart(2,'0');
+      ctx.fill();
+    });
+
+    // Titre principal
+    const fs = Math.floor(cv.height * .1);
+    const bounce = Math.sin(elapsed * 1.8) * 4;
+    ctx.save();
+    ctx.font = `900 ${fs}px Orbitron, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowColor = theme.accent; ctx.shadowBlur = 30 + Math.sin(elapsed * 3) * 10;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(title.toUpperCase(), cv.width/2, cv.height/2 + bounce);
+    // Sous-titre
+    ctx.font = `600 ${Math.floor(cv.height*.025)}px Rajdhani, sans-serif`;
+    ctx.fillStyle = theme.accent; ctx.shadowBlur = 10;
+    ctx.fillText('CRÉÉ AVEC CRÉA-ACTION', cv.width/2, cv.height/2 + fs*.7 + bounce);
+    ctx.restore();
+
+    // Barre de progression en bas
+    ctx.fillStyle = 'rgba(0,0,0,.6)';
+    ctx.fillRect(0, cv.height - 8, cv.width, 8);
+    const barGrad = ctx.createLinearGradient(0, 0, cv.width * progress, 0);
+    barGrad.addColorStop(0, theme.accent);
+    barGrad.addColorStop(1, theme.accent2);
+    ctx.fillStyle = barGrad;
+    ctx.fillRect(0, cv.height - 8, cv.width * progress, 8);
+
+    // Watermark
+    ctx.save();
+    ctx.font = `500 ${Math.floor(cv.height*.018)}px Rajdhani, sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.textAlign = 'right';
+    ctx.fillText('CRÉA-ACTION', cv.width - 16, cv.height - 20);
+    ctx.restore();
+
+    VG.animFrame = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function vgMakeAudio(style, duration, dest) {
+  const ctx = VG.audioCtx;
+  const master = ctx.createGain();
+  master.gain.value = .35;
+  master.connect(dest);
+
+  const bpm = {lofi:72, electronic:128, hiphop:88, ambient:60}[style] || 90;
+  const beat = 60 / bpm;
+  const now = ctx.currentTime + .1;
+
+  const scales = {
+    lofi:      [220, 247, 261, 293, 330, 370],
+    electronic:[261, 311, 392, 466, 523],
+    hiphop:    [138, 165, 185, 220, 261],
+    ambient:   [130, 146, 174, 196, 220, 261],
+  };
+  const scale = scales[style] || scales.lofi;
+
+  function kick(t) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(master);
+    o.frequency.setValueAtTime(160, t);
+    o.frequency.exponentialRampToValueAtTime(0.01, t + .35);
+    g.gain.setValueAtTime(.9, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + .35);
+    o.start(t); o.stop(t + .4);
+  }
+
+  function hat(t, vol=.12) {
+    const buf = ctx.createBuffer(1, ctx.sampleRate * .06, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1);
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    f.type = 'highpass'; f.frequency.value = 8000;
+    s.buffer = buf; s.connect(f); f.connect(g); g.connect(master);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + .06);
+    s.start(t);
+  }
+
+  function snare(t) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'triangle'; o.frequency.value = 200;
+    o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(.5, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + .15);
+    o.start(t); o.stop(t + .15);
+    hat(t, .2);
+  }
+
+  function note(t, freq, dur, vol=.12) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    const type = style === 'ambient' ? 'sine' : style === 'lofi' ? 'triangle' : 'sawtooth';
+    o.type = type; o.frequency.value = freq;
+    o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.start(t); o.stop(t + dur + .05);
+  }
+
+  // Boucle rythmique + mélodie
+  for (let step = 0; step * beat < duration; step++) {
+    const t = now + step * beat;
+    const pos = step % 4;
+    if (pos === 0) kick(t);
+    if (pos === 2) { if (style === 'hiphop' || style === 'electronic') snare(t); else kick(t); }
+    hat(t, style === 'electronic' ? .15 : .08);
+    if (style === 'electronic' && pos % 1 === 0) hat(t + beat*.5, .05);
+    // Basse
+    if (pos === 0 || pos === 2) {
+      const bassFreq = scale[0] * .5;
+      note(t, bassFreq, beat * .8, .18);
+    }
+    // Mélodie toutes les 2 beats
+    if (step % 2 === 0) {
+      const freq = scale[Math.floor(Math.random() * scale.length)];
+      note(t, freq, beat * (style === 'ambient' ? 3 : 1.6), .1);
+    }
+  }
+}
+
+async function vsPublishYT() {
+  if (!VG.blob) { toast('Aucune vidéo à publier', 'err'); return; }
+  const title = document.getElementById('vg-title').value.trim() || 'Vidéo CRÉA-ACTION';
+  const btn = document.getElementById('vg-pub-yt');
+  const status = document.getElementById('vg-pub-status');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Upload YouTube...';
+  status.textContent = 'Upload en cours, cela peut prendre 1-2 minutes...';
+  try {
+    const form = new FormData();
+    form.append('file', VG.blob, 'video.webm');
+    form.append('title', title);
+    form.append('description', 'Généré avec CRÉA-ACTION — Tableau de bord créateurs');
+    const res = await fetch('/api/studio/publish/youtube', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${authGetToken()}` },
+      body: form,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({detail: res.statusText}));
+      throw new Error(err.detail || 'Erreur upload');
+    }
+    const data = await res.json();
+    toast('Vidéo publiée sur YouTube ! 🎉', 'ok');
+    status.innerHTML = `✅ Publiée ! <a href="${data.url}" target="_blank" style="color:var(--cyan)">${data.url}</a>`;
+    btn.innerHTML = '<i class="fas fa-check"></i> Publié sur YouTube';
+  } catch(e) {
+    toast('Erreur: ' + e.message, 'err');
+    status.textContent = '❌ ' + e.message;
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fab fa-youtube"></i> Réessayer YouTube';
+  }
+}
+
+function vsPublishSoon(platform) {
+  toast(`Publication ${platform} — bientôt disponible !`, 'inf');
 }
 
 function vsImport() { document.getElementById('vs-file').click(); }
