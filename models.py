@@ -295,6 +295,17 @@ class ContentTodo(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class Goal(Base):
+    __tablename__ = "goals"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    title = Column(String)
+    target_amount = Column(Float, default=0.0)
+    current_amount = Column(Float, default=0.0)
+    deadline = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class RevenueHistory(Base):
     __tablename__ = "revenue_history"
     id = Column(Integer, primary_key=True)
