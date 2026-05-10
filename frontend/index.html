@@ -226,6 +226,14 @@ tbody td{padding:9px 11px}
 /* ─ Divider ─ */
 .div{height:1px;background:var(--border);margin:16px 0}
 .mb16{margin-bottom:16px}.mb20{margin-bottom:20px}.mb24{margin-bottom:24px}
+.ps-launcher{background:linear-gradient(135deg,rgba(124,58,237,.07),rgba(0,200,255,.04));border:1px solid rgba(124,58,237,.25);border-radius:var(--radius);padding:18px;margin-top:24px}
+.ps-launcher-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.ps-plat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.ps-plat-tile{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--text2);transition:all .2s;user-select:none}
+.ps-plat-tile:hover{border-color:var(--border2);color:var(--text)}
+.ps-plat-tile.selected{border-color:var(--purple2);background:rgba(124,58,237,.15);color:var(--text)}
+.ps-plat-tile i{width:14px;text-align:center}
+.vs-plat-tag{background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--purple2);display:flex;align-items:center;gap:5px}
 .vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:20px}
 .vid-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all .2s}
 .vid-card:hover{border-color:var(--cyan);box-shadow:var(--glow-c);transform:translateY(-2px)}
@@ -768,6 +776,21 @@ tbody td{padding:9px 11px}
     </div>
     <div id="ps-opps-list" class="ga"></div>
   </div>
+
+  <!-- ── Lanceur Studio Vidéo ── -->
+  <div class="ps-launcher">
+    <div class="ps-launcher-top">
+      <div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;color:var(--purple2);margin-bottom:4px"><i class="fas fa-rocket"></i> LANCER STUDIO VIDÉO</div>
+        <div style="font-size:11px;color:var(--text2)">Sélectionne les plateformes cibles — l'IA génèrera du contenu adapté à chacune.</div>
+      </div>
+      <button class="btn bai" onclick="psTeleport()" id="ps-teleport-btn" disabled><i class="fas fa-satellite-dish"></i> Téléporter vers Studio Vidéo</button>
+    </div>
+    <div class="ps-plat-grid" id="ps-plat-grid">
+      <!-- généré par JS -->
+    </div>
+    <div id="ps-teleport-count" style="font-size:11px;color:var(--text3);text-align:right;margin-top:8px">0 plateforme(s) sélectionnée(s)</div>
+  </div>
 </div>
 
 <!-- ─── VIDEO STUDIO ──────────────────────────────────────────────── -->
@@ -786,6 +809,15 @@ tbody td{padding:9px 11px}
     </div>
     <div class="vs-panel" id="vs-panel">
       <div class="vs-pempty">Importez une<br>vidéo pour<br>commencer</div>
+      <!-- Plateformes téléportées depuis Plateau Studio -->
+      <div id="vs-ai-zone" style="display:none;padding:14px;border-top:1px solid var(--border);margin-top:auto">
+        <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--purple2);margin-bottom:10px"><i class="fas fa-satellite-dish"></i> PLATEFORMES REÇUES</div>
+        <div id="vs-plat-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+        <div style="font-size:10px;color:var(--text2);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase">Sujet (optionnel)</div>
+        <input class="fi" id="vs-topic" placeholder="Ex: Monétisation, Gaming..." style="margin-bottom:10px;font-size:12px">
+        <button class="btn bai" style="width:100%" onclick="vsAIGenerate()"><i class="fas fa-magic"></i> Générer aléatoirement avec IA</button>
+        <div id="vs-ai-result" style="margin-top:12px;font-size:12px;line-height:1.6;color:var(--text);display:none"></div>
+      </div>
     </div>
   </div>
   <div class="vs-bottom">
@@ -1766,7 +1798,40 @@ const VS = {
 };
 
 function vsInit() {
-  if (!VS.loaded) return; // just re-enter, no reset
+  if (!VS.loaded) {} // just re-enter, no reset
+  vsLoadTeleported();
+}
+
+function vsLoadTeleported() {
+  const raw = localStorage.getItem('vs_platforms');
+  const zone = document.getElementById('vs-ai-zone');
+  const tags = document.getElementById('vs-plat-tags');
+  if (!raw || !zone || !tags) return;
+  const platforms = JSON.parse(raw);
+  if (!platforms.length) return;
+  tags.innerHTML = platforms.map(p =>
+    `<div class="vs-plat-tag"><i class="${p.icon}" style="color:${p.color}"></i>${p.label}</div>`
+  ).join('');
+  zone.style.display = 'block';
+}
+
+async function vsAIGenerate() {
+  const raw = localStorage.getItem('vs_platforms');
+  if (!raw) return;
+  const platforms = JSON.parse(raw);
+  const topic = document.getElementById('vs-topic').value.trim();
+  const platNames = platforms.map(p => p.label).join(', ');
+  const prompt = `Génère aléatoirement une idée de vidéo créative pour les plateformes : ${platNames}.${topic ? ` Sujet : ${topic}.` : ''}\n\nDonne :\n1. 🎬 Titre accrocheur\n2. 📋 Concept en 2 phrases\n3. 🎯 Format idéal pour chaque plateforme\n4. ⚡ Hook d'ouverture (10 secondes)\n5. 🏷️ 5 hashtags`;
+  const btn = document.querySelector('#vs-ai-zone .btn');
+  const result = document.getElementById('vs-ai-result');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération...'; }
+  result.style.display = 'none';
+  try {
+    const res = await api('/api/ai/chat', { method: 'POST', body: JSON.stringify({ message: prompt, history: [] }) });
+    result.innerHTML = res.response.replace(/\n/g, '<br>');
+    result.style.display = 'block';
+  } catch(e) { toast('Erreur IA: ' + e.message, 'err'); }
+  finally { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-magic"></i> Générer aléatoirement avec IA'; } }
 }
 
 function vsImport() { document.getElementById('vs-file').click(); }
@@ -2087,8 +2152,60 @@ function psTab(tab) {
   });
 }
 
+// ─── Lanceur Studio Vidéo ────────────────────────────────────────────────────
+const PS_PLATFORMS = [
+  { key:'youtube',   label:'YouTube',   icon:'fab fa-youtube',   color:'#ff4444' },
+  { key:'instagram', label:'Instagram', icon:'fab fa-instagram', color:'#e1306c' },
+  { key:'facebook',  label:'Facebook',  icon:'fab fa-facebook',  color:'#1877f2' },
+  { key:'tiktok',    label:'TikTok',    icon:'fab fa-tiktok',    color:'#e0e0f0' },
+  { key:'snapchat',  label:'Snapchat',  icon:'fab fa-snapchat',  color:'#fffc00' },
+  { key:'pinterest', label:'Pinterest', icon:'fab fa-pinterest', color:'#e60023' },
+  { key:'twitch',    label:'Twitch',    icon:'fab fa-twitch',    color:'#9146ff' },
+  { key:'twitter',   label:'Twitter/X', icon:'fab fa-x-twitter', color:'#e0e0f0' },
+  { key:'linkedin',  label:'LinkedIn',  icon:'fab fa-linkedin',  color:'#0a66c2' },
+  { key:'spotify',   label:'Spotify',   icon:'fab fa-spotify',   color:'#1db954' },
+  { key:'patreon',   label:'Patreon',   icon:'fab fa-patreon',   color:'#ff424d' },
+  { key:'substack',  label:'Substack',  icon:'fas fa-envelope',  color:'#ff6719' },
+  { key:'discord',   label:'Discord',   icon:'fab fa-discord',   color:'#5865f2' },
+];
+let _psSelected = new Set();
+
+function psRenderLauncher() {
+  const grid = document.getElementById('ps-plat-grid');
+  if (!grid) return;
+  grid.innerHTML = PS_PLATFORMS.map(p => `
+    <div class="ps-plat-tile${_psSelected.has(p.key)?' selected':''}" onclick="psTileToggle('${p.key}')" id="pstile-${p.key}">
+      <i class="${p.icon}" style="color:${p.color}"></i>${p.label}
+    </div>`).join('');
+  _psUpdateCount();
+}
+
+function psTileToggle(key) {
+  if (_psSelected.has(key)) _psSelected.delete(key); else _psSelected.add(key);
+  const tile = document.getElementById(`pstile-${key}`);
+  if (tile) tile.classList.toggle('selected', _psSelected.has(key));
+  _psUpdateCount();
+}
+
+function _psUpdateCount() {
+  const n = _psSelected.size;
+  const el = document.getElementById('ps-teleport-count');
+  const btn = document.getElementById('ps-teleport-btn');
+  if (el) el.textContent = `${n} plateforme(s) sélectionnée(s)`;
+  if (btn) btn.disabled = n === 0;
+}
+
+function psTeleport() {
+  if (_psSelected.size === 0) return;
+  const platforms = [..._psSelected].map(k => PS_PLATFORMS.find(p => p.key === k));
+  localStorage.setItem('vs_platforms', JSON.stringify(platforms));
+  navigate('video-studio');
+  toast(`${platforms.length} plateforme(s) envoyées au Studio Vidéo`, 'ok');
+}
+
 async function loadPlateauStudio() {
   psTab(_psActiveTab);
+  psRenderLauncher();
   await Promise.all([
     psFetchTrends(),
     psFetchIdeas(),
