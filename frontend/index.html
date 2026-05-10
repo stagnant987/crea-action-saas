@@ -1523,8 +1523,8 @@ async function loadYoutubePage() {
             ${a.avatar_url ? `<img src="${a.avatar_url}" style="width:38px;height:38px;border-radius:50%;border:2px solid var(--border2)">` : ''}
             <div>
               <div style="font-size:15px;font-weight:600">${a.channel_name||'—'}</div>
-              <a href="https://www.youtube.com/channel/${a.channel_id}" target="_blank" style="font-size:11px;color:var(--cyan);text-decoration:none;display:flex;align-items:center;gap:4px;margin-top:2px"><i class="fab fa-youtube" style="color:#ff4444"></i> youtube.com/channel/${a.channel_id}</a>
-              <span class="badge bgg" style="margin-top:4px">CONNECTÉ</span>
+              ${(() => { const url = a.custom_url ? `https://www.youtube.com/${a.custom_url}` : `https://www.youtube.com/channel/${a.channel_id}`; const label = a.custom_url ? `youtube.com/${a.custom_url}` : 'Voir la chaîne'; return `<a href="${url}" target="_blank" style="font-size:11px;color:#ff6666;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:3px"><i class="fab fa-youtube"></i> ${label}</a>`; })()}
+              <span class="badge bgg" style="margin-top:4px;display:block;width:fit-content">CONNECTÉ</span>
             </div>
           </div>
           <div class="flex g8">

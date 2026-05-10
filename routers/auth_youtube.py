@@ -93,6 +93,7 @@ def youtube_callback(code: str = None, state: str = None, error: str = None,
     channel_id = item["id"]
     channel_name = item["snippet"]["title"]
     avatar_url = item["snippet"]["thumbnails"].get("default", {}).get("url", "")
+    custom_url = item["snippet"].get("customUrl", "")
     subscribers = int(item["statistics"].get("subscriberCount", 0))
     total_views = int(item["statistics"].get("viewCount", 0))
 
@@ -104,6 +105,7 @@ def youtube_callback(code: str = None, state: str = None, error: str = None,
 
     account.channel_name = channel_name
     account.avatar_url = avatar_url
+    account.custom_url = custom_url
     account.access_token = access_token
     account.refresh_token = refresh_token or account.refresh_token
     account.token_expiry = datetime.utcnow() + timedelta(seconds=expires_in)
@@ -161,6 +163,7 @@ def list_youtube_accounts(current_user: User = Depends(get_current_user),
             "id": a.id,
             "channel_id": a.channel_id,
             "channel_name": a.channel_name,
+            "custom_url": a.custom_url or "",
             "avatar_url": a.avatar_url,
             "subscribers": a.subscribers,
             "total_views": a.total_views,

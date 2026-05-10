@@ -32,6 +32,7 @@ class YouTubeAccount(Base):
     access_token = Column(Text, default="")
     refresh_token = Column(Text, default="")
     token_expiry = Column(DateTime, nullable=True)
+    custom_url = Column(String, default="")
     subscribers = Column(Integer, default=0)
     total_views = Column(Integer, default=0)
     monthly_views = Column(Integer, default=0)
