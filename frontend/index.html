@@ -422,21 +422,13 @@ tbody td{padding:9px 11px}
   <div class="auth-box">
     <div class="auth-logo">CRÉA-ACTION</div>
     <div class="auth-sub">Tableau de bord créateurs</div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login" onclick="authShowTab('login')">Connexion</button>
-      <button class="auth-tab" id="tab-register" onclick="authShowTab('register')">Créer un compte</button>
-    </div>
     <div class="auth-err" id="auth-err"></div>
     <div id="auth-form-login">
       <div class="fg_"><label class="fl">Identifiant</label><input class="fi" id="auth-login-user" type="text" placeholder="votre identifiant" autocomplete="username"></div>
       <div class="fg_"><label class="fl">Mot de passe</label><input class="fi" id="auth-login-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
       <button class="auth-btn" onclick="authLogin()"><i class="fas fa-sign-in-alt"></i> SE CONNECTER</button>
     </div>
-    <div id="auth-form-register" style="display:none">
-      <div class="fg_"><label class="fl">Identifiant</label><input class="fi" id="auth-reg-user" type="text" placeholder="choisissez un identifiant" autocomplete="username"></div>
-      <div class="fg_"><label class="fl">Mot de passe</label><input class="fi" id="auth-reg-pass" type="password" placeholder="min. 6 caractères" autocomplete="new-password"></div>
-      <button class="auth-btn" onclick="authRegister()"><i class="fas fa-user-plus"></i> CRÉER MON COMPTE</button>
-    </div>
+    <div id="auth-form-register" style="display:none"></div>
   </div>
 </div>
 
