@@ -1070,7 +1070,29 @@ let _widgetHistory = [];
 let _banks = [];
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
+let _ytAutoRefresh = null;
+function _startYtRefresh() {
+  _stopYtRefresh();
+  _ytAutoRefresh = setInterval(async () => {
+    try {
+      const accounts = await api('/auth/youtube/accounts');
+      accounts.forEach(a => {
+        const s = document.getElementById(`yt-subs-${a.id}`);
+        const v = document.getElementById(`yt-views-${a.id}`);
+        const m = document.getElementById(`yt-mviews-${a.id}`);
+        const r = document.getElementById(`yt-rev-${a.id}`);
+        if (s) s.textContent = fmtN(a.subscribers);
+        if (v) v.textContent = fmtN(a.total_views);
+        if (m) m.textContent = fmtN(a.monthly_views);
+        if (r) r.textContent = fmt(a.estimated_revenue);
+      });
+    } catch(e) {}
+  }, 30000);
+}
+function _stopYtRefresh() { if (_ytAutoRefresh) { clearInterval(_ytAutoRefresh); _ytAutoRefresh = null; } }
+
 function navigate(page) {
+  _stopYtRefresh();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + page)?.classList.add('active');
@@ -1079,7 +1101,7 @@ function navigate(page) {
     dashboard: loadDashboard,
     'ai-page': loadAIPage,
     planner: () => {},
-    youtube: () => loadYoutubePage(),
+    youtube: () => { loadYoutubePage(); _startYtRefresh(); },
     instagram: () => loadPlatformPage('instagram', '/auth/meta/instagram/accounts', 'username', 'manual_revenue', '/auth/meta/login', 'Instagram + Facebook'),
     facebook: () => loadFBPage(),
     tiktok: () => loadPlatformPage('tiktok', '/auth/tiktok/accounts', 'display_name', 'manual_revenue', '/auth/tiktok/login', 'TikTok'),
@@ -1530,10 +1552,10 @@ async function loadYoutubePage() {
           </div>
         </div>
         <div class="g4">
-          <div class="pws-i"><div class="pws-l">Abonnés</div><div class="pws-v">${fmtN(a.subscribers)}</div></div>
-          <div class="pws-i"><div class="pws-l">Vues totales</div><div class="pws-v">${fmtN(a.total_views)}</div></div>
-          <div class="pws-i"><div class="pws-l">Vues mensuelles</div><div class="pws-v">${fmtN(a.monthly_views)}</div></div>
-          <div class="pws-i"><div class="pws-l">Revenus estimés</div><div class="pws-v">${fmt(a.estimated_revenue)}</div></div>
+          <div class="pws-i"><div class="pws-l">Abonnés</div><div class="pws-v" id="yt-subs-${a.id}">${fmtN(a.subscribers)}</div></div>
+          <div class="pws-i"><div class="pws-l">Vues totales</div><div class="pws-v" id="yt-views-${a.id}">${fmtN(a.total_views)}</div></div>
+          <div class="pws-i"><div class="pws-l">Vues mensuelles</div><div class="pws-v" id="yt-mviews-${a.id}">${fmtN(a.monthly_views)}</div></div>
+          <div class="pws-i"><div class="pws-l">Revenus estimés</div><div class="pws-v" id="yt-rev-${a.id}">${fmt(a.estimated_revenue)}</div></div>
         </div>
       </div>`).join('');
 
