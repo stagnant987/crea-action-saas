@@ -176,32 +176,47 @@ def _refresh_token(account, db) -> bool:
 
 
 def _sync_account(account, db) -> bool:
-    """Resynchronise les stats d'un compte YouTube depuis l'API."""
-    def _fetch(token):
-        return httpx.get(
-            "https://www.googleapis.com/youtube/v3/channels",
-            params={"part": "snippet,statistics", "mine": "true"},
-            headers={"Authorization": f"Bearer {token}"},
-            timeout=10,
-        )
-    try:
-        resp = _fetch(account.access_token)
-        if resp.status_code == 401:
-            # Token expiré → on le renouvelle et on réessaie
+    """Resynchronise les stats depuis YouTube API — vues calculées depuis les vidéos."""
+    headers = {"Authorization": f"Bearer {account.access_token}"}
+
+    def _get(url, params):
+        r = httpx.get(url, params=params, headers=headers, timeout=10)
+        if r.status_code == 401:
             if not _refresh_token(account, db):
-                return False
-            resp = _fetch(account.access_token)
-        if resp.status_code != 200:
+                return None
+            headers["Authorization"] = f"Bearer {account.access_token}"
+            r = httpx.get(url, params=params, headers={"Authorization": f"Bearer {account.access_token}"}, timeout=10)
+        return r if r.status_code == 200 else None
+
+    try:
+        # 1. Stats de la chaîne (abonnés, nom)
+        ch = _get("https://www.googleapis.com/youtube/v3/channels",
+                  {"part": "snippet,statistics", "mine": "true"})
+        if not ch:
             return False
-        items = resp.json().get("items", [])
+        items = ch.json().get("items", [])
         if not items:
             return False
         item = items[0]
-        stats = item["statistics"]
-        account.subscribers  = int(stats.get("subscriberCount", 0))
-        account.total_views  = int(stats.get("viewCount", 0))
+        account.subscribers  = int(item["statistics"].get("subscriberCount", 0))
         account.channel_name = item["snippet"]["title"]
         account.custom_url   = item["snippet"].get("customUrl", account.custom_url or "")
+
+        # 2. Vues réelles : somme des vues de chaque vidéo/Short
+        search = _get("https://www.googleapis.com/youtube/v3/search",
+                      {"part": "id", "forMine": "true", "type": "video",
+                       "maxResults": 50, "order": "date"})
+        total_views = 0
+        if search:
+            vid_ids = [i["id"]["videoId"] for i in search.json().get("items", []) if "videoId" in i.get("id", {})]
+            if vid_ids:
+                stats_resp = _get("https://www.googleapis.com/youtube/v3/videos",
+                                  {"part": "statistics", "id": ",".join(vid_ids)})
+                if stats_resp:
+                    for v in stats_resp.json().get("items", []):
+                        total_views += int(v.get("statistics", {}).get("viewCount", 0))
+
+        account.total_views  = total_views
         account.last_updated = datetime.utcnow()
         db.commit()
         return True
