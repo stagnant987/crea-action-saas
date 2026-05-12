@@ -737,6 +737,21 @@ tbody td{padding:9px 11px}
         <div class="fg_"><label class="fl">Confirmer</label><input type="password" class="fi" id="set-conf-pass" placeholder="Répétez le nouveau mot de passe"></div>
         <button class="btn bp bfull" onclick="changePassword()"><i class="fas fa-key"></i> Changer le mot de passe</button>
       </div>
+
+      <!-- ─ Créer un compte utilisateur ─ -->
+      <div style="margin-bottom:24px">
+        <div style="font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid rgba(0,200,255,.2);margin-bottom:14px">
+          <i class="fas fa-user-plus" style="color:var(--cyan)"></i> Créer un compte utilisateur
+        </div>
+        <p style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">
+          Créez un compte pour un autre créateur. Il pourra se connecter et lier son propre compte YouTube (et autres plateformes) — ses données sont complètement isolées du vôtre.
+        </p>
+        <div class="fg_"><label class="fl">Nom d'utilisateur</label><input class="fi" id="new-user-name" placeholder="ex: chris_thn, land_thn..."></div>
+        <div class="fg_"><label class="fl">Mot de passe</label><input type="password" class="fi" id="new-user-pass" placeholder="Minimum 6 caractères"></div>
+        <div class="fg_"><label class="fl">Confirmer le mot de passe</label><input type="password" class="fi" id="new-user-conf" placeholder="Répéter le mot de passe"></div>
+        <button class="btn bai bfull" onclick="adminCreateUser()"><i class="fas fa-user-plus"></i> Créer le compte</button>
+        <div id="new-user-status" style="font-size:11px;margin-top:8px;line-height:1.5"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -2661,6 +2676,34 @@ async function changePassword() {
     document.getElementById('set-new-pass').value = '';
     document.getElementById('set-conf-pass').value = '';
   } catch(e) { toast(e.message, 'err'); }
+}
+
+async function adminCreateUser() {
+  const username = (document.getElementById('new-user-name')?.value || '').trim();
+  const pass = document.getElementById('new-user-pass')?.value || '';
+  const conf = document.getElementById('new-user-conf')?.value || '';
+  const statusEl = document.getElementById('new-user-status');
+  if (!username) { toast('Entrez un nom d\'utilisateur', 'err'); return; }
+  if (pass.length < 6) { toast('Minimum 6 caractères pour le mot de passe', 'err'); return; }
+  if (pass !== conf) { toast('Les mots de passe ne correspondent pas', 'err'); return; }
+  try {
+    await fetch('/api/users/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password: pass }),
+    }).then(async r => {
+      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.detail || 'Erreur création'); }
+      return r.json();
+    });
+    if (statusEl) statusEl.innerHTML = `<span style="color:var(--green)">✅ Compte <strong>${username}</strong> créé ! Il peut maintenant se connecter et lier son YouTube.</span>`;
+    document.getElementById('new-user-name').value = '';
+    document.getElementById('new-user-pass').value = '';
+    document.getElementById('new-user-conf').value = '';
+    toast(`Compte "${username}" créé !`, 'ok');
+  } catch(e) {
+    if (statusEl) statusEl.innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
+    toast(e.message, 'err');
+  }
 }
 
 // ─── ITEM 3 — Plateau Studio ─────────────────────────────────────────────────
