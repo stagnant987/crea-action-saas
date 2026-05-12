@@ -153,16 +153,44 @@ def disconnect_youtube(account_id: int, current_user: User = Depends(get_current
     return {"status": "disconnected"}
 
 
-def _sync_account(account, db) -> bool:
-    """Resynchronise les stats d'un compte YouTube depuis l'API. Retourne True si succès."""
+def _refresh_token(account, db) -> bool:
+    """Renouvelle l'access token via le refresh token."""
+    if not account.refresh_token:
+        return False
     try:
-        headers = {"Authorization": f"Bearer {account.access_token}"}
-        resp = httpx.get(
+        resp = httpx.post(config.GOOGLE_TOKEN_URL, data={
+            "client_id": config.GOOGLE_CLIENT_ID,
+            "client_secret": config.GOOGLE_CLIENT_SECRET,
+            "refresh_token": account.refresh_token,
+            "grant_type": "refresh_token",
+        }, timeout=10)
+        if resp.status_code != 200:
+            return False
+        tokens = resp.json()
+        account.access_token = tokens["access_token"]
+        account.token_expiry = datetime.utcnow() + timedelta(seconds=tokens.get("expires_in", 3600))
+        db.commit()
+        return True
+    except Exception:
+        return False
+
+
+def _sync_account(account, db) -> bool:
+    """Resynchronise les stats d'un compte YouTube depuis l'API."""
+    def _fetch(token):
+        return httpx.get(
             "https://www.googleapis.com/youtube/v3/channels",
             params={"part": "snippet,statistics", "mine": "true"},
-            headers=headers,
+            headers={"Authorization": f"Bearer {token}"},
             timeout=10,
         )
+    try:
+        resp = _fetch(account.access_token)
+        if resp.status_code == 401:
+            # Token expiré → on le renouvelle et on réessaie
+            if not _refresh_token(account, db):
+                return False
+            resp = _fetch(account.access_token)
         if resp.status_code != 200:
             return False
         items = resp.json().get("items", [])
