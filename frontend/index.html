@@ -350,7 +350,8 @@ tbody td{padding:9px 11px}
 #page-video-studio{height:100%;display:none;flex-direction:column;overflow:hidden}
 #page-video-studio.active{display:flex}
 .vs-top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
-.vs-title{font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:3px;color:var(--text);flex:1;text-align:center}
+.vs-title{font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:3px;color:var(--text);flex:0 0 auto;min-width:130px}
+.vs-tabs-center{flex:1;display:flex;justify-content:center}
 .vs-body{display:flex;flex:1;overflow:hidden;min-height:0}
 .vs-canvas-zone{flex:1;display:flex;align-items:center;justify-content:center;background:#04040d;position:relative;cursor:pointer}
 #vs-canvas{display:block;max-width:100%;max-height:100%}
@@ -701,6 +702,12 @@ tbody td{padding:9px 11px}
       </div>
       <div style="margin-bottom:24px">
         <div style="font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px">Connexions OAuth</div>
+        <!-- Aide "accès bloqué" YouTube -->
+        <div style="background:rgba(255,68,102,.06);border:1px solid rgba(255,68,102,.2);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:var(--text2);line-height:1.7">
+          <div style="color:var(--red);font-weight:700;margin-bottom:5px"><i class="fas fa-exclamation-triangle"></i> YouTube : "Accès bloqué" ?</div>
+          L'app Google est en mode <strong style="color:var(--yellow)">Test</strong> — seuls les comptes ajoutés manuellement peuvent se connecter.<br>
+          <strong style="color:var(--text)">Solution :</strong> Allez sur <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" style="color:var(--cyan)">console.cloud.google.com</a> → <em>OAuth consent screen</em> → <em>Test users</em> → <strong>+ ADD USERS</strong> → entrez l'adresse Gmail du compte à autoriser.
+        </div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <a id="lnk-yt"  class="btn bp bfull"  onclick="location.href=oauthUrl('/auth/youtube/login')"  href="#"><i class="fab fa-youtube"></i> Connecter YouTube</a>
           <a id="lnk-meta" class="btn bpu bfull" onclick="location.href=oauthUrl('/auth/meta/login')"     href="#"><i class="fab fa-meta"></i> Connecter Instagram + Facebook</a>
@@ -822,9 +829,11 @@ tbody td{padding:9px 11px}
 <div class="page" id="page-video-studio">
   <div class="vs-top">
     <div class="vs-title">STUDIO VIDÉO</div>
-    <div class="vs-mode-tabs">
-      <button class="vs-mtab active" id="vstab-edit" onclick="vsMode('edit')"><i class="fas fa-cut"></i> Éditer</button>
-      <button class="vs-mtab" id="vstab-gen" onclick="vsMode('gen')"><i class="fas fa-magic"></i> Générer</button>
+    <div class="vs-tabs-center">
+      <div class="vs-mode-tabs">
+        <button class="vs-mtab active" id="vstab-edit" onclick="vsMode('edit')"><i class="fas fa-cut"></i> Éditer</button>
+        <button class="vs-mtab" id="vstab-gen" onclick="vsMode('gen')"><i class="fas fa-magic"></i> Générer IA</button>
+      </div>
     </div>
     <button class="vs-expbtn" id="vs-expbtn" disabled onclick="vsExport()"><i class="fas fa-download"></i> Exporter</button>
   </div>
@@ -846,9 +855,9 @@ tbody td{padding:9px 11px}
     <div class="vs-bottom">
       <div class="vs-tools">
         <button class="vs-tool" id="vst-import" onclick="vsImport();event.stopPropagation()"><i class="fas fa-folder-open"></i> Importer</button>
-        <button class="vs-tool" id="vst-text"   onclick="vsSetTool('text')"   disabled><i class="fas fa-font"></i> Texte</button>
-        <button class="vs-tool" id="vst-filter" onclick="vsSetTool('filter')" disabled><i class="fas fa-magic"></i> Effets</button>
-        <button class="vs-tool" id="vst-trim"   onclick="vsSetTool('trim')"   disabled><i class="fas fa-cut"></i> Rogner</button>
+        <button class="vs-tool" id="vst-text"   onclick="vsSetTool('text')"  ><i class="fas fa-font"></i> Texte</button>
+        <button class="vs-tool" id="vst-filter" onclick="vsSetTool('filter')"><i class="fas fa-magic"></i> Effets</button>
+        <button class="vs-tool" id="vst-trim"   onclick="vsSetTool('trim')"  ><i class="fas fa-cut"></i> Rogner</button>
       </div>
       <div class="vs-timeline" id="vs-tl" style="display:none">
         <button class="vs-play" id="vs-play" onclick="vsPlay()"><i class="fas fa-play"></i></button>
@@ -1961,7 +1970,7 @@ const VS = {
 };
 
 function vsInit() {
-  if (!VS.loaded) {}
+  vsSetTool('filter');
   vsCheckTeleported();
 }
 
@@ -2390,7 +2399,7 @@ function vsLoad(inp) {
     document.getElementById('vs-drop').onclick = null;
     document.getElementById('vs-tl').style.display = 'flex';
     document.getElementById('vs-dur').textContent = vsFmt(vid.duration);
-    ['vst-text','vst-filter','vst-trim'].forEach(id => document.getElementById(id).disabled = false);
+    // tool buttons are always enabled — no-op kept for timeline show
     document.getElementById('vs-expbtn').disabled = false;
     vsSetTool('filter');
     vsStartRender();
@@ -2526,7 +2535,8 @@ const VS_PRESETS=[
 
 function vsFilterPanel(){
   const f=VS.filter;
-  return `<div>
+  const hint=!VS.loaded?`<div style="font-size:10px;color:var(--yellow);background:rgba(255,214,0,.07);border:1px solid rgba(255,214,0,.2);border-radius:5px;padding:7px;margin-bottom:8px;line-height:1.6">⚠ Importez d'abord une vidéo pour voir les effets appliqués.</div>`:'';
+  return `${hint}<div>
     <div class="vs-plbl">Presets</div>
     <div class="vs-presets">${VS_PRESETS.map((p,i)=>`<div class="vs-preset" onclick="vsApplyPreset(${i})">${p.n}</div>`).join('')}</div>
   </div>
@@ -2546,7 +2556,8 @@ function vsApplyPreset(i){
 // ── Text panel ────────────────────────────────────────────────────
 function vsTextPanel(){
   const t=VS.selText;
-  return `<div class="vs-plbl">Texte</div>
+  const hint=!VS.loaded?`<div style="font-size:10px;color:var(--yellow);background:rgba(255,214,0,.07);border:1px solid rgba(255,214,0,.2);border-radius:5px;padding:7px;margin-bottom:8px;line-height:1.6">⚠ Importez une vidéo pour voir le texte s'afficher dessus. Vous pouvez préparer vos calques maintenant.</div>`:'';
+  return `${hint}<div class="vs-plbl">Texte</div>
   <div class="vs-field"><label>Contenu</label><input type="text" id="vst-cnt" placeholder="Mon texte..." value="${t?t.text:''}"></div>
   <div class="vs-field"><label>Taille</label><input type="range" min="16" max="120" value="${t?t.size:52}" oninput="vsUpdTxt('size',+this.value)"></div>
   <div class="vs-field"><label>Couleur</label><input type="color" value="${t?t.color:'#ffffff'}" oninput="vsUpdTxt('color',this.value)"></div>
@@ -2556,7 +2567,8 @@ function vsTextPanel(){
     <option ${t&&t.font==='Impact'?'selected':''}>Impact</option>
     <option ${t&&t.font==='Courier New'?'selected':''}>Courier New</option>
   </select></div>
-  <button class="vs-btn" onclick="vsAddTxt()" style="border-color:var(--cyan);color:var(--cyan)"><i class="fas fa-plus"></i> Ajouter</button>
+  <div class="vs-field"><label>Gras</label><input type="checkbox" ${t&&t.bold?'checked':''} onchange="vsUpdTxt('bold',this.checked)" style="accent-color:var(--cyan)"></div>
+  <button class="vs-btn" onclick="vsAddTxt()" style="border-color:var(--cyan);color:var(--cyan)"><i class="fas fa-plus"></i> Ajouter texte</button>
   ${t?`<button class="vs-btn del" onclick="vsDelTxt()"><i class="fas fa-trash"></i> Supprimer</button>`:''}
   ${VS.texts.length?`<div class="vs-plbl" style="margin-top:4px">Calques (${VS.texts.length})</div>
   ${VS.texts.map((tx,i)=>`<div style="font-size:10px;padding:4px 7px;background:var(--card2);border-radius:4px;cursor:pointer;border:1px solid ${VS.selText===tx?'var(--cyan)':'var(--border)'}" onclick="vsSelTxt(${i})">${tx.text}</div>`).join('')}`:''}`;
@@ -2594,11 +2606,14 @@ document.getElementById('vs-cv')?.addEventListener('mouseup',()=>{VS.dragTxt=nul
 
 // ── Trim panel ────────────────────────────────────────────────────
 function vsTrimPanel(){
+  if(!VS.loaded) return `<div class="vs-plbl">Rogner</div>
+    <div style="font-size:10px;color:var(--yellow);background:rgba(255,214,0,.07);border:1px solid rgba(255,214,0,.2);border-radius:5px;padding:7px;margin-bottom:8px;line-height:1.6">⚠ Importez d'abord une vidéo pour rogner.</div>
+    <button class="vs-btn" onclick="vsImport()"><i class="fas fa-folder-open"></i> Importer une vidéo</button>`;
   return `<div class="vs-plbl">Rogner</div>
   <p style="font-size:10px;color:var(--text2);line-height:1.7">Glissez les curseurs <span style="color:var(--purple2)">violets</span> sur la timeline pour définir le début et la fin.</p>
   <div class="vs-field"><label>Début</label><span style="color:var(--cyan);font-size:12px" id="vs-ts-lbl">${vsFmt(VS.trim.s)}</span></div>
   <div class="vs-field"><label>Fin</label><span style="color:var(--cyan);font-size:12px" id="vs-te-lbl">${vsFmt(VS.trim.e)}</span></div>
-  <div class="vs-field"><label>Durée</label><span style="color:var(--green);font-size:12px">${vsFmt(VS.trim.e-VS.trim.s)}</span></div>
+  <div class="vs-field"><label>Durée sélectionnée</label><span style="color:var(--green);font-size:12px">${vsFmt(VS.trim.e-VS.trim.s)}</span></div>
   <button class="vs-btn" onclick="vsResetTrim()">Réinitialiser</button>`;
 }
 function vsResetTrim(){VS.trim.s=0;VS.trim.e=VS.dur;vsUpdateBar();vsRenderPanel();}
