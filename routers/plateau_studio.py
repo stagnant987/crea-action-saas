@@ -705,6 +705,71 @@ async def publish_youtube(
     return {"status": "published", "video_id": video_id, "url": f"https://youtu.be/{video_id}"}
 
 
+# ── Génération d'idée vidéo IA ────────────────────────────────────────────────
+
+class AIVideoIdeaRequest(BaseModel):
+    niche: str = ""
+    platform: str = "YouTube"
+
+
+@router.post("/ai-video-idea")
+def ai_video_idea(request: AIVideoIdeaRequest,
+                  current_user: User = Depends(get_current_user),
+                  db: Session = Depends(get_db)):
+    """Génère un concept de vidéo viral avec Claude pour maximiser vues et revenus."""
+    client = get_client()
+    niche = request.niche or "motivation, business digital, astuces créateur"
+
+    response = client.messages.create(
+        model=config.ANTHROPIC_MODEL,
+        max_tokens=600,
+        messages=[{
+            "role": "user",
+            "content": f"""Tu es un expert en contenu viral sur {request.platform}. Génère une idée de vidéo courte (30-60s) très susceptible d'être vue massivement.
+
+Niche: {niche}
+
+Réponds UNIQUEMENT en JSON valide (aucun texte avant ni après):
+{{
+  "title": "TITRE EN MAJUSCULES MAX 45 CHARS",
+  "theme": "cyberpunk",
+  "sound": "electronic",
+  "description": "Description YouTube 2-3 phrases SEO optimisé avec mots-clés",
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+  "hook": "Accroche courte affichée dans la vidéo (max 38 chars)",
+  "key_points": ["Point 1 très court", "Point 2 très court", "Point 3 très court"]
+}}
+
+Règles: theme doit être parmi cyberpunk/lofi/fire/nature/minimal, sound parmi lofi/electronic/hiphop/ambient.
+Les key_points sont des conseils/faits impactants max 28 chars chacun.""",
+        }],
+    )
+
+    raw = response.content[0].text
+    import json, re
+    try:
+        m = re.search(r'\{.*\}', raw, re.DOTALL)
+        if m:
+            data = json.loads(m.group())
+            if data.get("theme") not in {"cyberpunk", "lofi", "fire", "nature", "minimal"}:
+                data["theme"] = "cyberpunk"
+            if data.get("sound") not in {"lofi", "electronic", "hiphop", "ambient"}:
+                data["sound"] = "electronic"
+            return data
+    except Exception:
+        pass
+
+    return {
+        "title": "CRÉEZ DU CONTENU VIRAL",
+        "theme": "cyberpunk",
+        "sound": "electronic",
+        "description": "Contenu généré avec CRÉA-ACTION — Dashboard créateurs pour maximiser vos revenus.",
+        "tags": ["contenu", "viral", "createur", "youtube", "revenus"],
+        "hook": "1 astuce pour 10x tes vues",
+        "key_points": ["Publie chaque jour", "Soigne l'accroche", "Appel à l'action"],
+    }
+
+
 # ── Utilitaire ────────────────────────────────────────────────────────────────
 
 def _auto_score():

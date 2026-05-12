@@ -862,6 +862,21 @@ tbody td{padding:9px 11px}
           <div id="vg-plat-tags" style="display:flex;flex-wrap:wrap;gap:5px"></div>
         </div>
 
+        <!-- IA Génération automatique -->
+        <div class="vg-field">
+          <label class="vg-label"><i class="fas fa-seedling" style="color:var(--green)"></i> Niche / Sujet</label>
+          <input class="fi" id="vg-niche" placeholder="ex: motivation, crypto, fitness...">
+        </div>
+        <button class="btn" style="width:100%;margin-bottom:8px;background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(168,85,247,.12));border-color:rgba(124,58,237,.4);color:var(--purple2)" id="vg-ai-btn" onclick="vsAIIdea()">
+          <i class="fas fa-robot"></i> IA : Générer idée virale
+        </button>
+        <div id="vg-ai-status" style="display:none;font-size:11px;color:var(--purple2);margin-bottom:10px;text-align:center">
+          <i class="fas fa-spinner fa-spin"></i> L'IA génère votre concept...
+        </div>
+        <div id="vg-ai-result" style="display:none;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);border-radius:8px;padding:10px;margin-bottom:14px">
+          <div id="vg-ai-hook" style="font-size:12px;color:var(--purple2);font-weight:600;margin-bottom:4px"></div>
+          <div id="vg-ai-tags" style="font-size:10px;color:var(--text3);line-height:1.6"></div>
+        </div>
         <div class="vg-field">
           <label class="vg-label">Titre de la vidéo</label>
           <input class="fi" id="vg-title" placeholder="Mon contenu créatif..." value="CRÉA-ACTION">
@@ -894,9 +909,23 @@ tbody td{padding:9px 11px}
           </select>
         </div>
 
-        <button class="btn bai" style="width:100%;margin-bottom:14px" id="vg-btn" onclick="vsStartGen()">
+        <button class="btn bai" style="width:100%;margin-bottom:8px" id="vg-btn" onclick="vsStartGen()">
           <i class="fas fa-magic"></i> GÉNÉRER LA VIDÉO
         </button>
+        <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text2);margin-bottom:14px;cursor:pointer;user-select:none">
+          <input type="checkbox" id="vg-auto-pub" style="accent-color:var(--purple2);width:14px;height:14px">
+          Auto-publier sur YouTube après génération
+        </label>
+
+        <!-- Pipeline IA status -->
+        <div id="vg-pipeline" style="display:none;background:rgba(0,0,0,.3);border:1px solid var(--border2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:11px">
+          <div style="color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;font-size:9px">Pipeline IA</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div id="vg-pipe-1" style="color:var(--text3)"><i class="fas fa-circle" style="font-size:7px"></i> Idée IA</div>
+            <div id="vg-pipe-2" style="color:var(--text3)"><i class="fas fa-circle" style="font-size:7px"></i> Génération vidéo</div>
+            <div id="vg-pipe-3" style="color:var(--text3)"><i class="fas fa-circle" style="font-size:7px"></i> Publication YouTube</div>
+          </div>
+        </div>
 
         <!-- Barre de progression -->
         <div id="vg-prog-wrap" style="display:none;margin-bottom:16px">
@@ -1953,7 +1982,47 @@ function vsCheckTeleported() {
 }
 
 // ─── MOTEUR DE GÉNÉRATION VIDÉO ──────────────────────────────────────────────
-const VG = { recording: false, recorder: null, chunks: [], blob: null, audioCtx: null, animFrame: null };
+const VG = { recording: false, recorder: null, chunks: [], blob: null, audioCtx: null, animFrame: null, aiData: null };
+
+// ─── IA : Génère une idée de vidéo virale ───────────────────────────────────
+async function vsAIIdea() {
+  const niche = (document.getElementById('vg-niche')?.value || '').trim();
+  const btn = document.getElementById('vg-ai-btn');
+  const statusEl = document.getElementById('vg-ai-status');
+  const resultEl = document.getElementById('vg-ai-result');
+  const pipeEl = document.getElementById('vg-pipeline');
+  btn.disabled = true; statusEl.style.display = 'block'; resultEl.style.display = 'none';
+  if (pipeEl) { pipeEl.style.display = 'block'; vgPipeStep(1, 'spin'); }
+  try {
+    const data = await api('/api/studio/ai-video-idea', { method: 'POST', body: JSON.stringify({ niche, platform: 'YouTube' }) });
+    VG.aiData = data;
+    document.getElementById('vg-title').value = data.title || 'CRÉA-ACTION';
+    const themeEl = document.getElementById('vg-theme');
+    if (data.theme && themeEl) themeEl.value = data.theme;
+    const soundEl = document.getElementById('vg-sound');
+    if (data.sound && soundEl) soundEl.value = data.sound;
+    document.getElementById('vg-ai-hook').textContent = '✦ ' + (data.hook || '');
+    document.getElementById('vg-ai-tags').textContent = (data.tags || []).map(t => '#' + t).join('  ');
+    statusEl.style.display = 'none'; resultEl.style.display = 'block';
+    if (pipeEl) vgPipeStep(1, 'ok');
+    toast('Concept IA généré ! Lance la vidéo.', 'ok');
+  } catch(e) {
+    toast('Erreur IA: ' + e.message, 'err');
+    statusEl.style.display = 'none';
+    if (pipeEl) vgPipeStep(1, 'err');
+  }
+  btn.disabled = false;
+}
+
+function vgPipeStep(step, state) {
+  const el = document.getElementById('vg-pipe-' + step);
+  if (!el) return;
+  const labels = { 1: 'Idée IA', 2: 'Génération vidéo', 3: 'Publication YouTube' };
+  const icons = { spin: '<i class="fas fa-spinner fa-spin" style="font-size:9px"></i>', ok: '<i class="fas fa-check-circle" style="font-size:9px;color:var(--green)"></i>', err: '<i class="fas fa-times-circle" style="font-size:9px;color:var(--red)"></i>', wait: '<i class="fas fa-circle" style="font-size:7px"></i>' };
+  const colors = { spin: 'var(--purple2)', ok: 'var(--green)', err: 'var(--red)', wait: 'var(--text3)' };
+  el.style.color = colors[state] || 'var(--text3)';
+  el.innerHTML = `${icons[state] || icons.wait} ${labels[step]}`;
+}
 
 const VG_THEMES = {
   cyberpunk: { bg: ['#080818','#0d0d2b','#1a0040'], accent: '#00c8ff', accent2: '#ff0080', particles: 70, grid: true },
@@ -1977,6 +2046,8 @@ function vsStartGen() {
   document.getElementById('vg-pub-zone').style.display = 'none';
   document.getElementById('vg-status').style.display = 'none';
   document.getElementById('vg-prog-wrap').style.display = 'block';
+  const pipeEl = document.getElementById('vg-pipeline');
+  if (pipeEl) { pipeEl.style.display = 'block'; vgPipeStep(2, 'spin'); if (!VG.aiData) vgPipeStep(1, 'ok'); }
   document.getElementById('vg-prog-bar').style.width = '0%';
   document.getElementById('vg-prog-pct').textContent = '0%';
   document.getElementById('vg-prog-lbl').textContent = 'Initialisation...';
@@ -2016,7 +2087,11 @@ function vsStartGen() {
       const a = document.createElement('a'); a.href = URL.createObjectURL(VG.blob);
       a.download = `${title.replace(/\s+/g,'_')}_${Date.now()}.webm`; a.click();
     };
-    toast('Vidéo générée ! 🎬', 'ok');
+    vgPipeStep(2, 'ok');
+    toast('Vidéo générée !', 'ok');
+    if (document.getElementById('vg-auto-pub')?.checked) {
+      setTimeout(() => vsPublishYT(), 600);
+    }
   };
   VG.recorder.start(200);
 
@@ -2103,11 +2178,43 @@ function vgDrawLoop(cv, ctx, themeKey, title, duration, t0) {
     ctx.shadowColor = theme.accent; ctx.shadowBlur = 30 + Math.sin(elapsed * 3) * 10;
     ctx.fillStyle = '#ffffff';
     ctx.fillText(title.toUpperCase(), cv.width/2, cv.height/2 + bounce);
-    // Sous-titre
-    ctx.font = `600 ${Math.floor(cv.height*.025)}px Rajdhani, sans-serif`;
+    // Hook IA (sous le titre)
+    const hook = VG.aiData?.hook || 'CRÉÉ AVEC CRÉA-ACTION';
+    ctx.font = `600 ${Math.floor(cv.height*.028)}px Rajdhani, sans-serif`;
     ctx.fillStyle = theme.accent; ctx.shadowBlur = 10;
-    ctx.fillText('CRÉÉ AVEC CRÉA-ACTION', cv.width/2, cv.height/2 + fs*.7 + bounce);
+    ctx.globalAlpha = Math.min(1, elapsed * 1.5);
+    ctx.fillText(hook.toUpperCase(), cv.width/2, cv.height/2 + fs*.72 + bounce);
+    ctx.globalAlpha = 1;
     ctx.restore();
+
+    // Key points IA — apparaissent séquentiellement
+    const keyPoints = VG.aiData?.key_points;
+    if (keyPoints && keyPoints.length > 0) {
+      const phaseLen = duration / keyPoints.length;
+      const pointIdx = Math.min(keyPoints.length - 1, Math.floor(elapsed / phaseLen));
+      const phaseElapsed = elapsed - pointIdx * phaseLen;
+      const fadeIn = Math.min(1, phaseElapsed * 4);
+      const fadeOut = phaseElapsed > phaseLen - 0.4 ? Math.max(0, 1 - (phaseElapsed - (phaseLen - 0.4)) * 6) : 1;
+      const alpha = fadeIn * fadeOut;
+      if (alpha > 0.01) {
+        const pt = keyPoints[pointIdx];
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.font = `700 ${Math.floor(cv.height*.042)}px Rajdhani, sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const textW = ctx.measureText(`✦ ${pt.toUpperCase()}`).width;
+        const pillW = textW + 48; const pillH = Math.floor(cv.height * .075);
+        const pillX = cv.width / 2 - pillW / 2; const pillY = cv.height * 0.76 - pillH / 2;
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.beginPath(); ctx.rect(pillX, pillY, pillW, pillH); ctx.fill();
+        ctx.strokeStyle = theme.accent + 'aa'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.rect(pillX, pillY, pillW, pillH); ctx.stroke();
+        ctx.shadowColor = theme.accent; ctx.shadowBlur = 18;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`✦ ${pt.toUpperCase()}`, cv.width / 2, cv.height * 0.76);
+        ctx.restore();
+      }
+    }
 
     // Barre de progression en bas
     ctx.fillStyle = 'rgba(0,0,0,.6)';
@@ -2214,15 +2321,17 @@ function vgMakeAudio(style, duration, dest) {
 async function vsPublishYT() {
   if (!VG.blob) { toast('Aucune vidéo à publier', 'err'); return; }
   const title = document.getElementById('vg-title').value.trim() || 'Vidéo CRÉA-ACTION';
+  const description = VG.aiData?.description || 'Généré avec CRÉA-ACTION — Tableau de bord créateurs';
   const btn = document.getElementById('vg-pub-yt');
   const status = document.getElementById('vg-pub-status');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Upload YouTube...';
   status.textContent = 'Upload en cours, cela peut prendre 1-2 minutes...';
+  vgPipeStep(3, 'spin');
   try {
     const form = new FormData();
     form.append('file', VG.blob, 'video.webm');
     form.append('title', title);
-    form.append('description', 'Généré avec CRÉA-ACTION — Tableau de bord créateurs');
+    form.append('description', description);
     const res = await fetch('/api/studio/publish/youtube', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${authGetToken()}` },
@@ -2233,10 +2342,12 @@ async function vsPublishYT() {
       throw new Error(err.detail || 'Erreur upload');
     }
     const data = await res.json();
-    toast('Vidéo publiée sur YouTube ! 🎉', 'ok');
+    vgPipeStep(3, 'ok');
+    toast('Vidéo publiée sur YouTube !', 'ok');
     status.innerHTML = `✅ Publiée ! <a href="${data.url}" target="_blank" style="color:var(--cyan)">${data.url}</a>`;
     btn.innerHTML = '<i class="fas fa-check"></i> Publié sur YouTube';
   } catch(e) {
+    vgPipeStep(3, 'err');
     toast('Erreur: ' + e.message, 'err');
     status.textContent = '❌ ' + e.message;
     btn.disabled = false;
