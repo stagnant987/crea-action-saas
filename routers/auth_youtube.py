@@ -153,11 +153,41 @@ def disconnect_youtube(account_id: int, current_user: User = Depends(get_current
     return {"status": "disconnected"}
 
 
+def _sync_account(account, db) -> bool:
+    """Resynchronise les stats d'un compte YouTube depuis l'API. Retourne True si succès."""
+    try:
+        headers = {"Authorization": f"Bearer {account.access_token}"}
+        resp = httpx.get(
+            "https://www.googleapis.com/youtube/v3/channels",
+            params={"part": "snippet,statistics", "mine": "true"},
+            headers=headers,
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return False
+        items = resp.json().get("items", [])
+        if not items:
+            return False
+        item = items[0]
+        stats = item["statistics"]
+        account.subscribers  = int(stats.get("subscriberCount", 0))
+        account.total_views  = int(stats.get("viewCount", 0))
+        account.channel_name = item["snippet"]["title"]
+        account.custom_url   = item["snippet"].get("customUrl", account.custom_url or "")
+        account.last_updated = datetime.utcnow()
+        db.commit()
+        return True
+    except Exception:
+        return False
+
+
 @router.get("/accounts")
 def list_youtube_accounts(current_user: User = Depends(get_current_user),
                           db: Session = Depends(get_db)):
-    """Retourne tous les comptes YouTube connectés de l'utilisateur."""
+    """Retourne les comptes YouTube en resynchronisant les stats depuis l'API."""
     accounts = db.query(YouTubeAccount).filter_by(user_id=current_user.id).all()
+    for a in accounts:
+        _sync_account(a, db)
     return [
         {
             "id": a.id,
