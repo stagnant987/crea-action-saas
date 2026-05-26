@@ -1264,7 +1264,7 @@ function navigate(page) {
     youtube: () => { loadYoutubePage(); _startYtRefresh(); },
     instagram: () => loadPlatformPage('instagram', '/auth/meta/instagram/accounts', 'username', 'manual_revenue', '/auth/meta/login', 'Instagram + Facebook'),
     facebook: () => loadFBPage(),
-    tiktok: () => loadPlatformPage('tiktok', '/auth/tiktok/accounts', 'display_name', 'manual_revenue', '/auth/tiktok/login', 'TikTok'),
+    tiktok: () => loadTikTokPage(),
     snapchat: () => loadPlatformPage('snapchat', '/auth/snapchat/accounts', 'display_name', 'ad_revenue', '/auth/snapchat/login', 'Snapchat'),
     pinterest: () => loadPlatformPage('pinterest', '/auth/pinterest/accounts', 'display_name', 'ad_revenue', '/auth/pinterest/login', 'Pinterest'),
     twitch: () => loadPlatformPage('twitch', '/auth/twitch/accounts', 'display_name', 'manual_revenue', '/auth/twitch/login', 'Twitch'),
@@ -1855,6 +1855,61 @@ async function loadYoutubePage() {
       videosHtml = `<div class="es"><p>Aucune vidéo trouvée sur ce canal.</p></div>`;
     }
     el.innerHTML = acctHtml + videosHtml;
+  } catch(e) { el.innerHTML = `<div class="es"><p>Erreur: ${e.message}</p></div>`; }
+}
+
+async function loadTikTokPage() {
+  const el = document.getElementById('ct-tiktok');
+  try {
+    const accounts = await api('/auth/tiktok/accounts');
+    if (!accounts.length) { el.innerHTML = connectCard('TikTok', '/auth/tiktok/login'); return; }
+    const a = accounts[0];
+    let html = `<div class="card mb16">
+      <div class="ch">
+        <div class="flex aic g12">
+          ${a.avatar_url ? `<img src="${a.avatar_url}" style="width:38px;height:38px;border-radius:50%;border:2px solid var(--border2)">` : ''}
+          <div><div style="font-size:15px;font-weight:600">${a.display_name||'—'}</div><span class="badge bgg">CONNECTÉ</span></div>
+        </div>
+        <div class="flex g8">
+          <button class="btn bg_ bsm" onclick="openRevModal(${a.id},'tiktok',${a.manual_revenue||0})"><i class="fas fa-edit"></i> Revenu</button>
+          <button class="btn bd bsm" onclick="disconnectAcct('tiktok',${a.id})"><i class="fas fa-unlink"></i></button>
+        </div>
+      </div>
+      <div class="g4">
+        <div class="pws-i"><div class="pws-l">USERNAME</div><div class="pws-v">${a.username||'—'}</div></div>
+        <div class="pws-i"><div class="pws-l">DISPLAY NAME</div><div class="pws-v">${a.display_name||'—'}</div></div>
+        <div class="pws-i"><div class="pws-l">FOLLOWERS</div><div class="pws-v">${fmtN(a.followers)}</div></div>
+        <div class="pws-i"><div class="pws-l">TOTAL VIEWS</div><div class="pws-v">${fmtN(a.total_views)}</div></div>
+      </div>
+    </div>`;
+    el.innerHTML = html + `<div id="tt-videos-section"><div class="es"><p>Chargement des vidéos...</p></div></div>`;
+    try {
+      const vdata = await api('/auth/tiktok/videos');
+      const videos = vdata.videos || [];
+      if (videos.length) {
+        const cards = videos.map(v => {
+          const date = v.create_time ? new Date(v.create_time * 1000).toLocaleDateString('fr-FR', {day:'numeric',month:'short',year:'numeric'}) : '';
+          return `<div class="vid-card" onclick="window.open('${v.share_url||'#'}','_blank')">
+            <img class="vid-thumb" src="${v.cover_image_url||''}" alt="" loading="lazy" onerror="this.style.display='none'">
+            <div class="vid-info">
+              <div class="vid-title">${v.title||'Sans titre'}</div>
+              <div class="vid-stats">
+                <span class="vid-stat"><i class="fas fa-eye"></i> ${fmtN(v.view_count||0)}</span>
+                <span class="vid-stat"><i class="fas fa-heart"></i> ${fmtN(v.like_count||0)}</span>
+                <span class="vid-stat"><i class="fas fa-comment"></i> ${fmtN(v.comment_count||0)}</span>
+              </div>
+              ${date ? `<div class="vid-date">${date}</div>` : ''}
+            </div>
+          </div>`;
+        }).join('');
+        document.getElementById('tt-videos-section').innerHTML =
+          `<div style="font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;color:var(--text2);margin:16px 0 10px">DERNIÈRES VIDÉOS</div><div class="vid-grid">${cards}</div>`;
+      } else {
+        document.getElementById('tt-videos-section').innerHTML = `<div class="es"><p>Aucune vidéo trouvée.</p></div>`;
+      }
+    } catch(e) {
+      document.getElementById('tt-videos-section').innerHTML = `<div class="es"><p>Impossible de charger les vidéos.</p></div>`;
+    }
   } catch(e) { el.innerHTML = `<div class="es"><p>Erreur: ${e.message}</p></div>`; }
 }
 

@@ -135,6 +135,31 @@ def tiktok_callback(code: str = None, state: str = None, error: str = None,
     return RedirectResponse(f"{config.APP_URL}/?connected=tiktok")
 
 
+@router.get("/videos")
+def list_tiktok_videos(current_user: User = Depends(get_current_user),
+                       db: Session = Depends(get_db)):
+    """Récupère les vidéos TikTok depuis l'API."""
+    account = db.query(TikTokAccount).filter_by(user_id=current_user.id).first()
+    if not account or not account.access_token:
+        raise HTTPException(404, "Aucun compte TikTok connecté")
+    try:
+        resp = httpx.post(
+            "https://open.tiktokapis.com/v2/video/list/",
+            params={"fields": "id,title,cover_image_url,share_url,view_count,like_count,comment_count,duration,create_time"},
+            json={"max_count": 20},
+            headers={"Authorization": f"Bearer {account.access_token}",
+                     "Content-Type": "application/json"},
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            data = resp.json().get("data", {})
+            videos = data.get("videos", [])
+            return {"videos": videos, "has_more": data.get("has_more", False)}
+        return {"videos": [], "has_more": False}
+    except Exception:
+        return {"videos": [], "has_more": False}
+
+
 @router.get("/accounts")
 def list_tiktok_accounts(current_user: User = Depends(get_current_user),
                          db: Session = Depends(get_db)):
