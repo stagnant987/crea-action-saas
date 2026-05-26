@@ -86,28 +86,37 @@ def tiktok_callback(code: str = None, state: str = None, error: str = None,
     if resp.status_code != 200:
         return RedirectResponse(f"{config.APP_URL}/?error=tiktok_token_failed")
 
-    data = resp.json().get("data", {})
+    token_json = resp.json()
+    data = token_json.get("data", token_json)  # certaines réponses ne sont pas nestées sous "data"
     access_token = data.get("access_token", "")
     refresh_token = data.get("refresh_token", "")
     open_id = data.get("open_id", "")
     expires_in = data.get("expires_in", 86400)
 
-    # Récupère le profil
-    user_resp = httpx.get(
-        "https://open.tiktokapis.com/v2/user/info/",
-        params={"fields": "open_id,display_name,avatar_url,follower_count,video_count"},
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
+    if not access_token or not open_id:
+        err = token_json.get("error", {})
+        err_msg = err.get("message", "token vide") if isinstance(err, dict) else str(err)
+        return RedirectResponse(f"{config.APP_URL}/?error=tiktok_token_failed&detail={err_msg[:80]}")
 
+    # Récupère le profil
     display_name = ""
     avatar_url = ""
     followers = 0
 
-    if user_resp.status_code == 200:
-        u = user_resp.json().get("data", {}).get("user", {})
-        display_name = u.get("display_name", "")
-        avatar_url = u.get("avatar_url", "")
-        followers = u.get("follower_count", 0)
+    try:
+        user_resp = httpx.get(
+            "https://open.tiktokapis.com/v2/user/info/",
+            params={"fields": "open_id,display_name,avatar_url,follower_count,video_count"},
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
+        )
+        if user_resp.status_code == 200:
+            u = user_resp.json().get("data", {}).get("user", {})
+            display_name = u.get("display_name", "")
+            avatar_url = u.get("avatar_url", "")
+            followers = u.get("follower_count", 0)
+    except Exception:
+        pass  # profil non critique, on continue avec les données du token
 
     # Sauvegarde
     account = db.query(TikTokAccount).filter_by(open_id=open_id, user_id=user_id).first()
