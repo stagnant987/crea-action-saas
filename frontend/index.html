@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRÉA-ACTION v2 — Dashboard IA</title>
+<title>CRÉA-ACTION v3 — Dashboard IA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -32,7 +32,7 @@ html,body{height:100%;font-family:'Rajdhani',sans-serif;background:var(--bg);col
 .topbar-center{flex:1;display:flex;justify-content:center;align-items:center;gap:24px}
 .total-pill{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:50px;padding:6px 22px}
 .total-pill .lbl{font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase}
-.total-pill .amt{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--cyan);text-shadow:0 0 20px rgba(255,255,255,.3)}
+.total-pill .amt{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;letter-spacing:.5px;color:var(--cyan);text-shadow:0 0 20px rgba(255,255,255,.3)}
 .topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .tb-date{font-size:11px;color:var(--text2);letter-spacing:1px}
 .btn-icon{background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text2);width:34px;height:34px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:13px}
@@ -77,7 +77,7 @@ html,body{height:100%;font-family:'Rajdhani',sans-serif;background:var(--bg);col
 .ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .ct{font-size:10px;letter-spacing:2px;color:var(--text2);text-transform:uppercase}
 .ci{font-size:17px}
-.sv{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:700}
+.sv{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;letter-spacing:.5px}
 .sv.cyan{color:var(--cyan);text-shadow:0 0 20px rgba(255,255,255,.3)}
 .sv.green{color:var(--green);text-shadow:0 0 20px rgba(200,200,200,.25)}
 .sv.purple{color:var(--purple2);text-shadow:0 0 20px rgba(150,150,150,.2)}
@@ -109,7 +109,7 @@ html,body{height:100%;font-family:'Rajdhani',sans-serif;background:var(--bg);col
 .pws{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .pws-i{background:var(--card2);border-radius:7px;padding:8px 10px}
 .pws-l{font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
-.pws-v{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:600;color:var(--text)}
+.pws-v{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--text)}
 .pbar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px}
 .pfill{height:100%;border-radius:2px;transition:width .6s}
 .fc{background:linear-gradient(90deg,#ffffff,#aaaaaa)}
@@ -414,6 +414,19 @@ tbody td{padding:9px 11px}
 .auth-btn:hover{background:rgba(255,255,255,.15);box-shadow:var(--glow-c)}
 .auth-user-badge{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--text2)}
 .auth-user-badge i{color:var(--cyan)}
+.pass-wrap{position:relative}
+.pass-wrap .fi{padding-right:38px;width:100%}
+.pass-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0;transition:color .2s}
+.pass-eye:hover{color:var(--text)}
+.forgot-link{display:block;text-align:right;font-size:11px;color:var(--text3);cursor:pointer;margin-top:5px;letter-spacing:.5px;transition:color .2s}
+.forgot-link:hover{color:var(--cyan)}
+.auth-ok{background:rgba(100,255,100,.08);border:1px solid rgba(100,255,100,.25);border-radius:7px;padding:9px 12px;font-size:12px;color:#6f6;margin-bottom:14px;display:none}
+.auth-ok.show{display:block}
+#reset-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:9999;display:none}
+#reset-modal.show{display:flex}
+.reset-box{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:32px 36px;width:min(380px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.8)}
+.reset-title{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:var(--cyan);margin-bottom:6px}
+.reset-sub{font-size:11px;color:var(--text2);margin-bottom:22px}
 </style>
 </head>
 <body>
@@ -428,15 +441,54 @@ tbody td{padding:9px 11px}
       <button class="auth-tab" id="tab-register" onclick="authShowTab('register')">Créer un compte</button>
     </div>
     <div class="auth-err" id="auth-err"></div>
+    <div class="auth-ok" id="auth-ok"></div>
     <div id="auth-form-login">
-      <div class="fg_"><label class="fl">Identifiant</label><input class="fi" id="auth-login-user" type="text" placeholder="votre identifiant" autocomplete="username"></div>
-      <div class="fg_"><label class="fl">Mot de passe</label><input class="fi" id="auth-login-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="fg_"><label class="fl">Email</label><input class="fi" id="auth-login-user" type="email" placeholder="votre@email.com" autocomplete="email"></div>
+      <div class="fg_">
+        <label class="fl">Mot de passe</label>
+        <div class="pass-wrap">
+          <input class="fi" id="auth-login-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+          <button class="pass-eye" type="button" onclick="togglePass('auth-login-pass',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+        </div>
+        <span class="forgot-link" onclick="openResetModal()">Mot de passe oublié ?</span>
+      </div>
       <button class="auth-btn" onclick="authLogin()"><i class="fas fa-sign-in-alt"></i> SE CONNECTER</button>
     </div>
     <div id="auth-form-register" style="display:none">
       <div class="fg_"><label class="fl">Identifiant</label><input class="fi" id="auth-reg-user" type="text" placeholder="choisissez un identifiant" autocomplete="username"></div>
-      <div class="fg_"><label class="fl">Mot de passe</label><input class="fi" id="auth-reg-pass" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+      <div class="fg_"><label class="fl">Email</label><input class="fi" id="auth-reg-email" type="email" placeholder="votre@email.com" autocomplete="email"></div>
+      <div class="fg_">
+        <label class="fl">Mot de passe</label>
+        <div class="pass-wrap">
+          <input class="fi" id="auth-reg-pass" type="password" placeholder="••••••••" autocomplete="new-password">
+          <button class="pass-eye" type="button" onclick="togglePass('auth-reg-pass',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+        </div>
+      </div>
       <button class="auth-btn" onclick="authRegister()"><i class="fas fa-user-plus"></i> CRÉER MON COMPTE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL RESET MOT DE PASSE ═══════════════════════════════════ -->
+<div id="reset-modal">
+  <div class="reset-box">
+    <div class="reset-title"><i class="fas fa-key"></i> RÉINITIALISER</div>
+    <div class="reset-sub">Entrez votre identifiant et choisissez un nouveau mot de passe.</div>
+    <div class="auth-err" id="reset-err" style="margin-bottom:12px"></div>
+    <div class="auth-ok" id="reset-ok" style="margin-bottom:12px"></div>
+    <div class="fg_"><label class="fl">Identifiant</label><input class="fi" id="reset-user" type="text" placeholder="votre identifiant"></div>
+    <div class="fg_"><label class="fl">Email du compte</label><input class="fi" id="reset-email" type="email" placeholder="votre@email.com"></div>
+    <div class="fg_">
+      <label class="fl">Nouveau mot de passe</label>
+      <div class="pass-wrap">
+        <input class="fi" id="reset-pass" type="password" placeholder="min 6 caractères">
+        <button class="pass-eye" type="button" onclick="togglePass('reset-pass',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+    <div class="fg_"><label class="fl">Confirmer le mot de passe</label><input class="fi" id="reset-pass2" type="password" placeholder="répétez le mot de passe"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="auth-btn" style="flex:1" onclick="doReset()"><i class="fas fa-check"></i> RÉINITIALISER</button>
+      <button class="auth-btn" style="flex:0 0 auto;padding:11px 16px;font-size:16px" onclick="closeResetModal()"><i class="fas fa-times"></i></button>
     </div>
   </div>
 </div>
@@ -467,7 +519,7 @@ tbody td{padding:9px 11px}
 
 <!-- ═══ TOPBAR ═══════════════════════════════════════════════════ -->
 <header class="topbar">
-  <div class="logo">CRÉA<span style="-webkit-text-fill-color:var(--green)">-</span>ACTION <span class="logo-v">v2</span></div>
+  <div class="logo">CRÉA<span style="-webkit-text-fill-color:var(--green)">-</span>ACTION <span class="logo-v">v3</span></div>
   <div class="topbar-center">
     <div class="total-pill">
       <div class="lbl">Revenu Total</div>
@@ -566,6 +618,34 @@ tbody td{padding:9px 11px}
     <div class="card gp"><div class="ch"><span class="ct">Patreon</span><i class="fab fa-patreon ci" style="color:#ff424d"></i></div><div class="sv purple" id="qs-pat">0 €</div><div class="ss" id="qs-pat-s">0 patrons</div></div>
     <div class="card gg"><div class="ch"><span class="ct">Produits</span><i class="fas fa-box ci" style="color:var(--green)"></i></div><div class="sv green" id="qs-prod">0 €</div><div class="ss" id="qs-prod-s">0 produit(s)</div></div>
     <div class="card"><div class="ch"><span class="ct">TikTok</span><i class="fab fa-tiktok ci"></i></div><div class="sv" id="qs-tt">0 €</div><div class="ss" id="qs-tt-s">0 abonnés</div></div>
+  </div>
+
+  <!-- Objectifs financiers -->
+  <div class="g2 mb20">
+    <div class="card">
+      <div class="ch">
+        <span class="ct"><i class="fas fa-bullseye" style="color:var(--cyan)"></i> Objectifs du mois</span>
+        <button class="btn bp bsm" onclick="openModal('goal-modal')"><i class="fas fa-plus"></i> Ajouter</button>
+      </div>
+      <div id="dash-goals"><div class="es"><i class="fas fa-bullseye"></i><p>Aucun objectif</p></div></div>
+    </div>
+    <div class="card">
+      <div class="ch">
+        <span class="ct"><i class="fas fa-tasks" style="color:var(--green)"></i> Tâches à faire</span>
+      </div>
+      <div id="dash-todos"><div class="es"><i class="fas fa-check-double"></i><p>Aucune tâche</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ajout objectif -->
+<div class="mo" id="goal-modal">
+  <div class="md" style="max-width:380px">
+    <div class="ch mb16"><span style="font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:2px">NOUVEL OBJECTIF</span><button class="btn-icon" onclick="closeModal('goal-modal')"><i class="fas fa-times"></i></button></div>
+    <div class="fg_"><label class="fl">Titre</label><input class="fi" id="goal-title" placeholder="Ex: 1 000 € ce mois"></div>
+    <div class="fg_"><label class="fl">Montant cible (€)</label><input class="fi" type="number" id="goal-target" placeholder="1000" min="1"></div>
+    <div class="fg_"><label class="fl">Échéance (optionnel)</label><input class="fi" type="date" id="goal-deadline"></div>
+    <button class="btn bp bfull" onclick="createGoal()"><i class="fas fa-plus"></i> Créer l'objectif</button>
   </div>
 </div>
 
@@ -738,7 +818,7 @@ tbody td{padding:9px 11px}
       </div>
       <div class="card">
         <p style="font-size:13px;color:var(--text2);line-height:1.9">
-          <strong style="color:var(--text)">CRÉA-ACTION v2</strong><br>
+          <strong style="color:var(--text)">CRÉA-ACTION v3</strong><br>
           IA conversationnelle Claude intégrée<br>
           13 plateformes supportées<br>
           Données 100% locales — SQLite<br><br>
@@ -784,9 +864,22 @@ tbody td{padding:9px 11px}
 
   <!-- Tendances -->
   <div id="ps-section-trends">
-    <div class="flex g8 mb16">
+    <div class="flex g8 mb16" style="flex-wrap:wrap">
       <span style="font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;align-self:center">Tendances IA détectées</span>
-      <button class="btn bai bsm" style="margin-left:auto" onclick="psDetectTrends()"><i class="fas fa-magic"></i> Détecter avec IA</button>
+      <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;align-items:center">
+        <input id="ps-niche-input" class="fi" style="width:180px;padding:5px 10px;font-size:12px" placeholder="Niche (ex: gaming, food...)">
+        <select id="ps-platforms-select" class="fsel" style="font-size:11px;padding:5px 8px">
+          <option value="YouTube,TikTok,Instagram">Toutes plateformes</option>
+          <option value="YouTube">YouTube</option>
+          <option value="TikTok">TikTok</option>
+          <option value="Instagram">Instagram</option>
+          <option value="YouTube,TikTok">YouTube + TikTok</option>
+          <option value="Instagram,TikTok">Instagram + TikTok</option>
+        </select>
+        <button class="btn bai bsm" id="ps-detect-btn" onclick="psDetectTrends()">
+          <i class="fas fa-magic"></i> Détecter avec IA
+        </button>
+      </div>
     </div>
     <div id="ps-trends-list" class="ga"></div>
   </div>
@@ -915,13 +1008,7 @@ tbody td{padding:9px 11px}
         </div>
         <div class="vg-field">
           <label class="vg-label">Thème visuel</label>
-          <select class="fsel" id="vg-theme">
-            <option value="cyberpunk">⚡ Cyberpunk Néon</option>
-            <option value="lofi">☕ Lofi Chill</option>
-            <option value="fire">🔥 Fire Energy</option>
-            <option value="nature">🌿 Nature Zen</option>
-            <option value="minimal">◾ Minimal Dark</option>
-          </select>
+          <select class="fsel" id="vg-theme"></select>
         </div>
         <div class="vg-field">
           <label class="vg-label">Ambiance sonore</label>
@@ -930,6 +1017,18 @@ tbody td{padding:9px 11px}
             <option value="electronic">⚡ Electronic</option>
             <option value="hiphop">🎤 Hip-Hop Beat</option>
             <option value="ambient">🌙 Ambient</option>
+            <option value="trap">🔥 Trap</option>
+            <option value="jazz">🎷 Jazz</option>
+            <option value="retrowave">🌆 Retrowave 80s</option>
+            <option value="cinematic">🎬 Cinématique</option>
+            <option value="drill">🥁 Drill</option>
+            <option value="reggaeton">💃 Reggaeton</option>
+            <option value="gaming">🎮 Gaming 8-bit</option>
+            <option value="dark">🖤 Dark Moody</option>
+            <option value="afrobeat">🌍 Afrobeat</option>
+            <option value="classical">🎻 Classique</option>
+            <option value="rock">🎸 Rock</option>
+            <option value="nature">🌿 Nature</option>
           </select>
         </div>
         <div class="vg-field">
@@ -975,8 +1074,8 @@ tbody td{padding:9px 11px}
           <div class="vg-sec-title" style="margin-bottom:12px"><i class="fas fa-paper-plane"></i> PUBLIER</div>
           <button class="vg-pub-btn" id="vg-dl-btn"><i class="fas fa-download"></i> Télécharger (.webm)</button>
           <button class="vg-pub-btn yt" id="vg-pub-yt" onclick="vsPublishYT()"><i class="fab fa-youtube"></i> Publier sur YouTube</button>
-          <button class="vg-pub-btn tt" onclick="vsPublishSoon('TikTok')"><i class="fab fa-tiktok"></i> TikTok <span class="badge bgx" style="font-size:9px">Bientôt</span></button>
-          <button class="vg-pub-btn ig" onclick="vsPublishSoon('Instagram')"><i class="fab fa-instagram"></i> Instagram <span class="badge bgx" style="font-size:9px">Bientôt</span></button>
+          <button class="vg-pub-btn tt" id="vg-pub-tt" onclick="vsPublishTT()"><i class="fab fa-tiktok"></i> TikTok</button>
+          <button class="vg-pub-btn ig" id="vg-pub-ig" onclick="vsPublishIG()"><i class="fab fa-instagram"></i> Instagram</button>
           <div id="vg-pub-status" style="font-size:11px;color:var(--text2);margin-top:8px;line-height:1.5"></div>
         </div>
       </div>
@@ -1221,10 +1320,12 @@ async function authLogin() {
 
 async function authRegister() {
   const u = document.getElementById('auth-reg-user').value.trim();
+  const email = document.getElementById('auth-reg-email').value.trim();
   const p = document.getElementById('auth-reg-pass').value;
-  if (!u || !p) { authShowErr('Remplissez tous les champs.'); return; }
+  if (!u || !email || !p) { authShowErr('Remplissez tous les champs.'); return; }
+  if (!email.includes('@')) { authShowErr('Email invalide.'); return; }
   try {
-    const r = await fetch('/api/users/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+    const r = await fetch('/api/users/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, email, password: p }) });
     const data = await r.json();
     if (!r.ok) { authShowErr(data.detail || 'Erreur lors de la création.'); return; }
     authSetToken(data.access_token, data.username);
@@ -1238,6 +1339,54 @@ function authLogout() {
   document.getElementById('topbar-user').style.display = 'none';
   document.getElementById('btn-logout').style.display = 'none';
   authShowTab('login');
+}
+
+function togglePass(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const icon = btn.querySelector('i');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.className = 'fas fa-eye-slash';
+  } else {
+    inp.type = 'password';
+    icon.className = 'fas fa-eye';
+  }
+}
+
+function openResetModal() {
+  document.getElementById('reset-modal').classList.add('show');
+  document.getElementById('reset-err').classList.remove('show');
+  document.getElementById('reset-ok').classList.remove('show');
+  document.getElementById('reset-email').value = document.getElementById('auth-login-user').value || '';
+  document.getElementById('reset-user').value = '';
+  document.getElementById('reset-pass').value = '';
+  document.getElementById('reset-pass2').value = '';
+}
+
+function closeResetModal() {
+  document.getElementById('reset-modal').classList.remove('show');
+}
+
+async function doReset() {
+  const u = document.getElementById('reset-user').value.trim();
+  const email = document.getElementById('reset-email').value.trim();
+  const p = document.getElementById('reset-pass').value;
+  const p2 = document.getElementById('reset-pass2').value;
+  const errEl = document.getElementById('reset-err');
+  const okEl = document.getElementById('reset-ok');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+  if (!u || !email) { errEl.textContent = 'Entrez votre identifiant et email.'; errEl.classList.add('show'); return; }
+  if (p.length < 6) { errEl.textContent = 'Mot de passe trop court (min 6 caractères).'; errEl.classList.add('show'); return; }
+  if (p !== p2) { errEl.textContent = 'Les mots de passe ne correspondent pas.'; errEl.classList.add('show'); return; }
+  try {
+    const r = await fetch('/api/users/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, email, new_password: p }) });
+    const data = await r.json();
+    if (!r.ok) { errEl.textContent = data.detail || 'Erreur lors de la réinitialisation.'; errEl.classList.add('show'); return; }
+    okEl.textContent = '✓ Mot de passe réinitialisé ! Vous pouvez vous connecter.';
+    okEl.classList.add('show');
+    document.getElementById('auth-login-user').value = u;
+    setTimeout(() => { closeResetModal(); }, 2000);
+  } catch(e) { errEl.textContent = 'Erreur réseau.'; errEl.classList.add('show'); }
 }
 
 function authEnterApp(username) {
@@ -1313,7 +1462,13 @@ async function loadDashboard() {
     updateDots(_sum);
     renderWidgets(_sum);
     renderQS(_sum);
-    await Promise.all([loadChart(), loadDashTodos(), loadDashGoals(), loadDailyTip()]);
+    const [, , syncResult] = await Promise.all([loadChart(), loadDashTodos(), api('/api/dashboard/sync-goals', {method:'POST'}), loadDailyTip()]);
+    await loadDashGoals(syncResult.goals);
+    syncResult.goals.forEach(g => {
+      if (g.newly_achieved) {
+        setTimeout(() => toast(`🏆 Objectif atteint : ${g.title} — ${fmt(g.target_amount)} !`, 'ok'), 800);
+      }
+    });
   } catch(e) { toast('Erreur dashboard: ' + e.message, 'err'); }
 }
 
@@ -1409,13 +1564,49 @@ async function loadDashTodos() {
   } catch(e) {}
 }
 
-async function loadDashGoals() {
+async function loadDashGoals(goals) {
+  const el = document.getElementById('dash-goals');
+  if (!goals || !goals.length) {
+    el.innerHTML = '<div class="es"><i class="fas fa-bullseye"></i><p>Aucun objectif — cliquez sur Ajouter</p></div>';
+    return;
+  }
+  el.innerHTML = goals.slice(0,4).map(g => {
+    const pct = Math.min(g.progress_pct, 100);
+    const achieved = g.achieved;
+    const color = achieved ? 'var(--green)' : pct > 66 ? 'var(--cyan)' : pct > 33 ? '#ffaa00' : 'var(--text2)';
+    const badge = achieved
+      ? `<span style="font-size:9px;background:rgba(0,230,118,.15);color:var(--green);border:1px solid rgba(0,230,118,.4);border-radius:20px;padding:2px 8px;letter-spacing:1px">✓ ATTEINT</span>`
+      : `<span style="color:${color};font-weight:700;font-size:13px">${g.progress_pct}%</span>`;
+    const fill = achieved ? 'fc' : pct > 66 ? 'fc' : pct > 33 ? '' : 'fdk';
+    const barColor = achieved ? 'background:linear-gradient(90deg,var(--green),#00b050)' : pct > 33 ? '' : '';
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-size:13px;font-weight:600;color:var(--text)">${g.title}</span>
+        ${badge}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:4px">
+        <span>${fmt(g.current_amount)}</span><span>/ ${fmt(g.target_amount)}</span>
+      </div>
+      <div class="pbar" style="height:6px"><div class="pfill ${fill}" style="width:${pct}%;${achieved?'background:linear-gradient(90deg,var(--green),#00b050)':''}"></div></div>
+      ${g.deadline ? `<div style="font-size:9px;color:var(--text3);margin-top:3px">Échéance : ${g.deadline}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function createGoal() {
+  const title = document.getElementById('goal-title').value.trim();
+  const target = parseFloat(document.getElementById('goal-target').value);
+  const deadline = document.getElementById('goal-deadline').value || null;
+  if (!title || !target) { toast('Titre et montant requis', 'err'); return; }
   try {
-    const goals = await api('/api/content/goals');
-    const el = document.getElementById('dash-goals');
-    if (!goals.length) { el.innerHTML = '<div class="es"><i class="fas fa-bullseye"></i><p>Aucun objectif</p></div>'; return; }
-    el.innerHTML = goals.slice(0,4).map(g => `<div style="margin-bottom:12px"><div class="flex jsb tsm mb16"><span>${g.title}</span><span style="color:var(--cyan)">${g.progress_pct}%</span></div><div class="pbar pb6"><div class="pfill fc" style="width:${Math.min(g.progress_pct,100)}%"></div></div></div>`).join('');
-  } catch(e) {}
+    await api('/api/content/goals', { method:'POST', body: JSON.stringify({ title, target_amount: target, deadline }) });
+    closeModal('goal-modal');
+    document.getElementById('goal-title').value = '';
+    document.getElementById('goal-target').value = '';
+    document.getElementById('goal-deadline').value = '';
+    toast('Objectif créé !', 'ok');
+    loadDashboard();
+  } catch(e) { toast('Erreur: ' + e.message, 'err'); }
 }
 
 async function saveSnapshot() {
@@ -1466,12 +1657,34 @@ function askWidget(q) { document.getElementById('widget-inp').value = q; sendWid
 // ─── AI Page ─────────────────────────────────────────────────────────────────
 async function loadAIPage() {
   const msgsEl = document.getElementById('full-chat-msgs');
-  if (msgsEl.children.length === 0) {
+  msgsEl.innerHTML = '';
+  _chatHistory = [];
+
+  try {
+    const history = await api('/api/ai/history?limit=50');
+    if (history && history.length > 0) {
+      history.forEach(m => {
+        const d = document.createElement('div');
+        d.className = `msg ${m.role}`;
+        d.style.whiteSpace = 'pre-wrap';
+        d.textContent = m.content;
+        msgsEl.appendChild(d);
+        _chatHistory.push({ role: m.role, content: m.content });
+      });
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+    } else {
+      const d = document.createElement('div');
+      d.className = 'msg assistant';
+      d.textContent = '👋 Bienvenue ! Je suis CRÉA-IA. Je connais toutes vos données en temps réel. Posez-moi n\'importe quelle question sur vos revenus, plateformes, ou demandez un plan de contenu.';
+      msgsEl.appendChild(d);
+    }
+  } catch(e) {
     const d = document.createElement('div');
     d.className = 'msg assistant';
-    d.textContent = '👋 Bienvenue ! Je suis CRÉA-IA. Je connais toutes vos données en temps réel. Posez-moi n\'importe quelle question sur vos revenus, plateformes, ou demandez un plan de contenu.';
+    d.textContent = '👋 Bienvenue ! Je suis CRÉA-IA. Posez-moi n\'importe quelle question sur vos revenus ou plateformes.';
     msgsEl.appendChild(d);
   }
+
   loadInsights();
   loadDailyTip();
 }
@@ -1978,6 +2191,7 @@ const VS = {
 };
 
 function vsInit() {
+  populateVGThemeSelect();
   vsSetTool('filter');
   vsCheckTeleported();
 }
@@ -2057,12 +2271,81 @@ function vgPipeStep(step, state) {
 }
 
 const VG_THEMES = {
-  cyberpunk: { bg: ['#080818','#0d0d2b','#1a0040'], accent: '#00c8ff', accent2: '#ff0080', particles: 70, grid: true },
-  lofi:      { bg: ['#1a0e2e','#2d1b4e','#3d2a1e'], accent: '#ffd600', accent2: '#ff8c00', particles: 35, grid: false },
-  fire:      { bg: ['#1a0500','#3d0e00','#5c1a00'], accent: '#ff6600', accent2: '#ffcc00', particles: 90, grid: false },
-  nature:    { bg: ['#031a0d','#062e1a','#0a3d26'], accent: '#00e676', accent2: '#00bcd4', particles: 50, grid: false },
-  minimal:   { bg: ['#080810','#0f0f1e','#13132a'], accent: '#7c3aed', accent2: '#a855f7', particles: 20, grid: true },
+  // ═══ CYBER / NEON ════════════════════════════════════════════════════
+  cyberpunk:    { name:'Cyberpunk',          bg:['#080818','#0d0d2b','#1a0040'], accent:'#00c8ff', accent2:'#ff0080', particles:70, grid:true },
+  neonCity:     { name:'Neon City',          bg:['#000000','#050510','#000d20'], accent:'#00ffea', accent2:'#ff00aa', particles:90, grid:true },
+  glitch:       { name:'Glitch',             bg:['#050010','#0a0020','#150030'], accent:'#00ff99', accent2:'#cc00ff', particles:60, grid:false },
+  ultraviolet:  { name:'Ultra Violet',       bg:['#08000f','#10001f','#18002f'], accent:'#bf00ff', accent2:'#7700ff', particles:55, grid:true },
+  laserGrid:    { name:'Laser Grid',         bg:['#030000','#0d0000','#1a0000'], accent:'#ff0033', accent2:'#ff6600', particles:40, grid:true },
+  toxicWaste:   { name:'Toxic Waste',        bg:['#020800','#050f00','#0a1500'], accent:'#aaff00', accent2:'#00ff44', particles:75, grid:false },
+  hackMode:     { name:'Hack Mode',          bg:['#000000','#000800','#001000'], accent:'#00ff41', accent2:'#00cc33', particles:100,grid:true },
+  matrix:       { name:'Matrix',             bg:['#000500','#000f00','#001a00'], accent:'#00ff41', accent2:'#00cc33', particles:80, grid:false },
+  electricBlue: { name:'Electric Blue',      bg:['#000010','#00001f','#000035'], accent:'#0066ff', accent2:'#00ccff', particles:65, grid:true },
+  neonDream:    { name:'Neon Dream',         bg:['#0d001a','#1a0033','#000d1a'], accent:'#ff00cc', accent2:'#00ffff', particles:85, grid:true },
+  // ═══ DARK / SPACE ════════════════════════════════════════════════════
+  void:         { name:'Void',               bg:['#000000','#050005','#08000a'], accent:'#5500ff', accent2:'#aa00ff', particles:30, grid:false },
+  nebula:       { name:'Nébuleuse',          bg:['#000010','#05000a','#0a0020'], accent:'#ff44aa', accent2:'#4466ff', particles:70, grid:false },
+  starfield:    { name:'Champ d\'Étoiles',   bg:['#000005','#000010','#000020'], accent:'#ffffff', accent2:'#ffffaa', particles:120,grid:false },
+  cosmicDark:   { name:'Cosmos Dark',        bg:['#000005','#02000a','#050015'], accent:'#8844ff', accent2:'#ff4488', particles:50, grid:false },
+  blackhole:    { name:'Trou Noir',          bg:['#000000','#010005','#030008'], accent:'#6600cc', accent2:'#cc0066', particles:25, grid:false },
+  moonlight:    { name:'Clair de Lune',      bg:['#000510','#000f20','#001030'], accent:'#aaccff', accent2:'#ffffff', particles:35, grid:false },
+  deepSpace:    { name:'Deep Space',         bg:['#000008','#000015','#000022'], accent:'#0088ff', accent2:'#ff0088', particles:60, grid:true },
+  // ═══ WARM / FIRE ═════════════════════════════════════════════════════
+  fire:         { name:'Feu',                bg:['#1a0500','#3d0e00','#5c1a00'], accent:'#ff6600', accent2:'#ffcc00', particles:90, grid:false },
+  volcano:      { name:'Volcan',             bg:['#100000','#200000','#300000'], accent:'#ff2200', accent2:'#ff8800', particles:80, grid:false },
+  lava:         { name:'Lave',               bg:['#1a0000','#2d0000','#400000'], accent:'#ff4400', accent2:'#ffaa00', particles:70, grid:false },
+  sunset:       { name:'Coucher de Soleil',  bg:['#0d0520','#1a0a10','#2d1000'], accent:'#ff6688', accent2:'#ffaa44', particles:45, grid:false },
+  ember:        { name:'Braise',             bg:['#1a0800','#2a1000','#3a1800'], accent:'#ff8800', accent2:'#ffdd00', particles:55, grid:false },
+  phoenix:      { name:'Phénix',             bg:['#1a0000','#2d0500','#3d0a00'], accent:'#ffaa00', accent2:'#ff4400', particles:85, grid:false },
+  molten:       { name:'Métal Fondu',        bg:['#0d0800','#1a1000','#2a1800'], accent:'#ff9900', accent2:'#ffdd66', particles:50, grid:true },
+  // ═══ NATURE / FRESH ══════════════════════════════════════════════════
+  nature:       { name:'Nature',             bg:['#031a0d','#062e1a','#0a3d26'], accent:'#00e676', accent2:'#00bcd4', particles:50, grid:false },
+  forest:       { name:'Forêt',              bg:['#010d05','#021a0a','#032a10'], accent:'#33cc55', accent2:'#88ff44', particles:45, grid:false },
+  ocean:        { name:'Océan',              bg:['#000d1a','#001a33','#002244'], accent:'#00e5ff', accent2:'#0091ff', particles:45, grid:false },
+  tropical:     { name:'Tropical',           bg:['#001a0d','#002d15','#003d1a'], accent:'#00ff88', accent2:'#ffdd00', particles:55, grid:false },
+  aurora:       { name:'Aurore Boréale',     bg:['#000a10','#000d18','#001020'], accent:'#00ffaa', accent2:'#aa00ff', particles:40, grid:false },
+  jade:         { name:'Jade',               bg:['#001a10','#002d1a','#003d22'], accent:'#00cc66', accent2:'#00ffaa', particles:35, grid:true },
+  // ═══ RETRO / VIBE ════════════════════════════════════════════════════
+  lofi:         { name:'Lo-Fi',              bg:['#1a0e2e','#2d1b4e','#3d2a1e'], accent:'#ffd600', accent2:'#ff8c00', particles:35, grid:false },
+  synthwave:    { name:'Synthwave',          bg:['#13001a','#1a0033','#0d0026'], accent:'#ff00ff', accent2:'#ff69b4', particles:65, grid:true },
+  vaporwave:    { name:'Vaporwave',          bg:['#1a0533','#0a1a33','#200a33'], accent:'#ff77aa', accent2:'#55aaff', particles:50, grid:true },
+  retroWave:    { name:'Retro Wave',         bg:['#0a0020','#150040','#0d0030'], accent:'#ff6600', accent2:'#ff0099', particles:60, grid:true },
+  miami:        { name:'Miami Vice',         bg:['#000d20','#001a15','#000d2a'], accent:'#00e5cc', accent2:'#ff4488', particles:55, grid:true },
+  arcade:       { name:'Arcade',             bg:['#050005','#0a000a','#0f000f'], accent:'#ff2200', accent2:'#ffee00', particles:70, grid:true },
+  discoNeon:    { name:'Disco Neon',         bg:['#0a0010','#10001a','#18002a'], accent:'#ff00ff', accent2:'#ffff00', particles:80, grid:false },
+  // ═══ GOLD / PREMIUM ══════════════════════════════════════════════════
+  goldRush:     { name:'Gold Rush',          bg:['#0d0900','#1f1600','#2e2000'], accent:'#ffd700', accent2:'#ff8c00', particles:55, grid:true },
+  luxury:       { name:'Luxe Noir',          bg:['#050500','#0a0a00','#0f0d00'], accent:'#d4af37', accent2:'#c0a020', particles:30, grid:true },
+  platinum:     { name:'Platine',            bg:['#080810','#10101a','#181820'], accent:'#ccddee', accent2:'#8899aa', particles:35, grid:true },
+  royalGold:    { name:'Or Royal',           bg:['#0a0500','#180a00','#250f00'], accent:'#ffcc00', accent2:'#cc8800', particles:45, grid:true },
+  champagne:    { name:'Champagne',          bg:['#0d0a00','#1a1500','#221a00'], accent:'#eecc77', accent2:'#ffeeaa', particles:40, grid:false },
+  // ═══ DARK DRAMA ══════════════════════════════════════════════════════
+  bloodMoon:    { name:'Lune de Sang',       bg:['#0d0000','#1a0000','#2d0000'], accent:'#cc0000', accent2:'#ff4400', particles:40, grid:false },
+  crimson:      { name:'Cramoisi',           bg:['#0f0000','#1a0000','#280000'], accent:'#cc0044', accent2:'#ff4466', particles:40, grid:false },
+  venom:        { name:'Venin',              bg:['#010501','#020a02','#030f03'], accent:'#33ff00', accent2:'#66ff33', particles:60, grid:false },
+  shadow:       { name:'Ombre',              bg:['#080808','#0f0f0f','#151515'], accent:'#666666', accent2:'#aaaaaa', particles:20, grid:false },
+  nightmare:    { name:'Cauchemar',          bg:['#050008','#0a0010','#0f0018'], accent:'#8800ff', accent2:'#dd00aa', particles:45, grid:false },
+  // ═══ COOL / ARCTIC ═══════════════════════════════════════════════════
+  arctic:       { name:'Arctique',           bg:['#000510','#000a1a','#001020'], accent:'#80dfff', accent2:'#ffffff', particles:30, grid:true },
+  glacier:      { name:'Glacier',            bg:['#000a18','#001028','#001838'], accent:'#88ccff', accent2:'#aaeeff', particles:25, grid:true },
+  frost:        { name:'Givre',              bg:['#000810','#00101a','#001824'], accent:'#aaddff', accent2:'#eeffff', particles:35, grid:false },
+  crystal:      { name:'Cristal',            bg:['#040a10','#080f1a','#0c1520'], accent:'#66ccff', accent2:'#ffffff', particles:45, grid:true },
+  // ═══ MINIMAL ═════════════════════════════════════════════════════════
+  minimal:      { name:'Minimal',            bg:['#080810','#0f0f1e','#13132a'], accent:'#7c3aed', accent2:'#a855f7', particles:20, grid:true },
+  slate:        { name:'Ardoise',            bg:['#080a0c','#0d1015','#121820'], accent:'#4488aa', accent2:'#6699bb', particles:15, grid:true },
+  pureBlack:    { name:'Noir Pur',           bg:['#000000','#030303','#060606'], accent:'#333333', accent2:'#555555', particles:10, grid:false },
 };
+
+function populateVGThemeSelect() {
+  const sel = document.getElementById('vg-theme');
+  if (!sel || sel.options.length > 0) return;
+  Object.entries(VG_THEMES).forEach(([key, t]) => {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = t.name || key;
+    sel.appendChild(opt);
+  });
+}
 
 function vsStartGen() {
   if (VG.recording) return;
@@ -2275,7 +2558,18 @@ function vgMakeAudio(style, duration, dest) {
   master.gain.value = .35;
   master.connect(dest);
 
-  const bpm = {lofi:72, electronic:128, hiphop:88, ambient:60}[style] || 90;
+  const bpmMap = {
+    lofi:72, electronic:128, hiphop:88, ambient:60,
+    trap:140, jazz:100, retrowave:110, cinematic:70,
+    drill:145, reggaeton:100, gaming:120, dark:75,
+    afrobeat:112, classical:80, rock:130, nature:0
+  };
+  const bpm = bpmMap[style] || 90;
+
+  if (style === 'nature') { vgNatureAudio(ctx, master, duration); return; }
+  if (style === 'classical') { vgClassicalAudio(ctx, master, duration); return; }
+  if (style === 'gaming') { vgGamingAudio(ctx, master, duration); return; }
+
   const beat = 60 / bpm;
   const now = ctx.currentTime + .1;
 
@@ -2284,69 +2578,266 @@ function vgMakeAudio(style, duration, dest) {
     electronic:[261, 311, 392, 466, 523],
     hiphop:    [138, 165, 185, 220, 261],
     ambient:   [130, 146, 174, 196, 220, 261],
+    trap:      [138, 155, 185, 207, 220, 247],
+    jazz:      [220, 247, 277, 311, 330, 370, 415, 440],
+    retrowave: [261, 293, 329, 392, 440, 523],
+    cinematic: [196, 220, 261, 293, 349, 392],
+    drill:     [138, 146, 165, 185, 220],
+    reggaeton: [196, 220, 247, 261, 293, 329],
+    dark:      [116, 130, 146, 174, 196, 220],
+    afrobeat:  [220, 247, 277, 293, 330, 370, 415],
+    rock:      [196, 220, 261, 294, 330, 392],
   };
   const scale = scales[style] || scales.lofi;
 
-  function kick(t) {
+  function kick(t, freq=160, decay=.35) {
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.connect(g); g.connect(master);
-    o.frequency.setValueAtTime(160, t);
-    o.frequency.exponentialRampToValueAtTime(0.01, t + .35);
+    o.frequency.setValueAtTime(freq, t);
+    o.frequency.exponentialRampToValueAtTime(0.01, t + decay);
     g.gain.setValueAtTime(.9, t);
-    g.gain.exponentialRampToValueAtTime(.001, t + .35);
-    o.start(t); o.stop(t + .4);
+    g.gain.exponentialRampToValueAtTime(.001, t + decay);
+    o.start(t); o.stop(t + decay + .05);
   }
 
-  function hat(t, vol=.12) {
-    const buf = ctx.createBuffer(1, ctx.sampleRate * .06, ctx.sampleRate);
+  function hat(t, vol=.12, dur=.06) {
+    const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1);
     const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
     f.type = 'highpass'; f.frequency.value = 8000;
     s.buffer = buf; s.connect(f); f.connect(g); g.connect(master);
     g.gain.setValueAtTime(vol, t);
-    g.gain.exponentialRampToValueAtTime(.001, t + .06);
+    g.gain.exponentialRampToValueAtTime(.001, t + dur);
     s.start(t);
   }
 
-  function snare(t) {
+  function snare(t, vol=.5) {
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.type = 'triangle'; o.frequency.value = 200;
     o.connect(g); g.connect(master);
-    g.gain.setValueAtTime(.5, t);
+    g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(.001, t + .15);
     o.start(t); o.stop(t + .15);
     hat(t, .2);
   }
 
-  function note(t, freq, dur, vol=.12) {
+  function bass808(t, freq, dur) {
     const o = ctx.createOscillator(), g = ctx.createGain();
-    const type = style === 'ambient' ? 'sine' : style === 'lofi' ? 'triangle' : 'sawtooth';
-    o.type = type; o.frequency.value = freq;
+    o.type = 'sine'; o.frequency.setValueAtTime(freq * 2, t);
+    o.frequency.exponentialRampToValueAtTime(freq, t + .05);
+    o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(.6, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.start(t); o.stop(t + dur + .05);
+  }
+
+  function note(t, freq, dur, vol=.12, waveType=null) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    const typeMap = {
+      ambient:'sine', lofi:'triangle', electronic:'sawtooth',
+      trap:'sawtooth', jazz:'sine', retrowave:'sawtooth',
+      cinematic:'sine', drill:'sawtooth', reggaeton:'sawtooth',
+      dark:'sine', afrobeat:'triangle', rock:'sawtooth', hiphop:'triangle'
+    };
+    o.type = waveType || typeMap[style] || 'sine';
+    o.frequency.value = freq;
     o.connect(g); g.connect(master);
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(.001, t + dur);
     o.start(t); o.stop(t + dur + .05);
   }
 
-  // Boucle rythmique + mélodie
+  function chord(t, freqs, dur, vol=.07) {
+    freqs.forEach(f => note(t, f, dur, vol));
+  }
+
   for (let step = 0; step * beat < duration; step++) {
     const t = now + step * beat;
     const pos = step % 4;
-    if (pos === 0) kick(t);
-    if (pos === 2) { if (style === 'hiphop' || style === 'electronic') snare(t); else kick(t); }
-    hat(t, style === 'electronic' ? .15 : .08);
-    if (style === 'electronic' && pos % 1 === 0) hat(t + beat*.5, .05);
-    // Basse
-    if (pos === 0 || pos === 2) {
-      const bassFreq = scale[0] * .5;
-      note(t, bassFreq, beat * .8, .18);
+    const pos8 = step % 8;
+    const pos16 = step % 16;
+
+    if (style === 'trap') {
+      if (pos === 0) kick(t, 55, .5);
+      if (pos === 2 || step % 6 === 5) kick(t, 55, .3);
+      snare(t + beat * 1.5);
+      for (let h = 0; h < 4; h++) hat(t + h * beat * .25, .08, .04);
+      if (pos8 === 0) bass808(t, scale[0] * .5, beat * 2);
+      if (pos8 === 4) bass808(t, scale[2] * .5, beat * 1.5);
+      if (step % 3 === 0) note(t, scale[Math.floor(Math.random()*scale.length)], beat * .5, .09);
+
+    } else if (style === 'jazz') {
+      if (pos === 0) kick(t);
+      if (pos === 2) kick(t + beat * .5);
+      hat(t, .1); hat(t + beat * .67, .07);
+      if (pos8 === 0) chord(t, [scale[0], scale[2], scale[4]], beat * 2, .06);
+      if (pos8 === 4) chord(t, [scale[1], scale[3], scale[5]], beat * 2, .06);
+      if (step % 2 === 0) note(t + beat * Math.random() * .3, scale[Math.floor(Math.random()*scale.length)], beat * .8, .08, 'sine');
+
+    } else if (style === 'retrowave') {
+      if (pos === 0 || pos === 2) kick(t);
+      if (pos === 1 || pos === 3) snare(t, .4);
+      hat(t, .1); hat(t + beat * .5, .06);
+      const bassFreq = scale[pos % 2] * .5;
+      note(t, bassFreq, beat * .9, .2, 'sawtooth');
+      if (step % 4 === 0) chord(t, [scale[0], scale[2], scale[4]], beat * 4, .07);
+      note(t + beat * .5, scale[Math.floor(Math.random()*scale.length)], beat * .4, .1, 'square');
+
+    } else if (style === 'cinematic') {
+      if (pos === 0) kick(t, 80, .6);
+      if (pos === 2) kick(t, 60, .8);
+      if (step % 8 === 4) snare(t, .3);
+      if (pos8 === 0) chord(t, [scale[0], scale[2], scale[4]], beat * 8, .06);
+      if (pos8 === 4) chord(t, [scale[1], scale[3], scale[5] || scale[0] * 2], beat * 4, .05);
+      if (step % 4 === 0) note(t, scale[Math.floor(Math.random()*scale.length)] * 2, beat * 3, .08, 'sine');
+
+    } else if (style === 'drill') {
+      if (pos === 0) kick(t, 60, .4);
+      if (pos16 === 6 || pos16 === 10 || pos16 === 14) kick(t, 60, .2);
+      if (pos === 2) snare(t, .6);
+      for (let h = 0; h < 3; h++) hat(t + h * beat * .33, .1, .03);
+      if (pos === 0 || pos === 2) bass808(t, scale[0] * .5, beat);
+      if (step % 3 === 0) note(t, scale[Math.floor(Math.random()*scale.length)], beat * .4, .08);
+
+    } else if (style === 'reggaeton') {
+      if (pos === 0 || step % 3 === 2) kick(t, 80, .3);
+      if (pos === 1 || pos === 3) snare(t, .4);
+      hat(t, .1); hat(t + beat * .5, .08);
+      note(t, scale[0] * .5, beat * .8, .18, 'sine');
+      if (step % 2 === 0) note(t + beat * .25, scale[Math.floor(Math.random()*scale.length)], beat * .5, .09);
+
+    } else if (style === 'dark') {
+      if (pos === 0) kick(t, 50, .7);
+      if (pos === 2) kick(t, 45, .5);
+      if (pos === 3) snare(t, .3);
+      hat(t, .07);
+      note(t, scale[0] * .25, beat * 2, .15, 'sine');
+      if (step % 4 === 0) chord(t, [scale[0], scale[1]], beat * 4, .05);
+      if (step % 3 === 0) note(t, scale[Math.floor(Math.random()*scale.length)], beat * 2, .06, 'sine');
+
+    } else if (style === 'afrobeat') {
+      if (pos === 0 || pos === 2.5) kick(t, 100, .2);
+      if (pos === 1 || pos === 3) snare(t, .35);
+      hat(t, .12); hat(t + beat * .25, .08); hat(t + beat * .5, .1); hat(t + beat * .75, .06);
+      note(t, scale[pos % scale.length] * .5, beat * .7, .15, 'triangle');
+      if (step % 2 === 0) note(t + beat * .5, scale[Math.floor(Math.random()*scale.length)], beat * .6, .09);
+
+    } else if (style === 'rock') {
+      if (pos === 0 || pos === 2) kick(t, 80, .3);
+      if (pos === 1 || pos === 3) snare(t, .6);
+      hat(t, .15); hat(t + beat * .5, .1);
+      note(t, scale[0] * .5, beat * .9, .2, 'sawtooth');
+      if (step % 4 === 0) chord(t, [scale[0], scale[2]], beat * 2, .1);
+      note(t, scale[Math.floor(Math.random()*scale.length)], beat * .4, .1, 'square');
+
+    } else {
+      // lofi, hiphop, electronic, ambient (original)
+      if (pos === 0) kick(t);
+      if (pos === 2) { if (style === 'hiphop' || style === 'electronic') snare(t); else kick(t); }
+      hat(t, style === 'electronic' ? .15 : .08);
+      if (style === 'electronic') hat(t + beat * .5, .05);
+      if (pos === 0 || pos === 2) note(t, scale[0] * .5, beat * .8, .18);
+      if (step % 2 === 0) {
+        const freq = scale[Math.floor(Math.random() * scale.length)];
+        note(t, freq, beat * (style === 'ambient' ? 3 : 1.6), .1);
+      }
     }
-    // Mélodie toutes les 2 beats
-    if (step % 2 === 0) {
-      const freq = scale[Math.floor(Math.random() * scale.length)];
-      note(t, freq, beat * (style === 'ambient' ? 3 : 1.6), .1);
-    }
+  }
+}
+
+function vgNatureAudio(ctx, master, duration) {
+  const now = ctx.currentTime + .1;
+  // Pluie
+  for (let i = 0; i < duration * 80; i++) {
+    const t = now + Math.random() * duration;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * .04, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let j = 0; j < d.length; j++) d[j] = (Math.random() * 2 - 1) * .3;
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    f.type = 'bandpass'; f.frequency.value = 2000 + Math.random() * 3000;
+    s.buffer = buf; s.connect(f); f.connect(g); g.connect(master);
+    g.gain.setValueAtTime(.08, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + .04);
+    s.start(t);
+  }
+  // Oiseaux (fréquences aiguës)
+  const birdFreqs = [2093, 2349, 2637, 3136, 3520];
+  for (let i = 0; i < duration * 2; i++) {
+    const t = now + Math.random() * duration;
+    const freq = birdFreqs[Math.floor(Math.random() * birdFreqs.length)];
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(freq, t);
+    o.frequency.linearRampToValueAtTime(freq * 1.2, t + .1);
+    o.frequency.linearRampToValueAtTime(freq, t + .2);
+    o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(.04, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + .25);
+    o.start(t); o.stop(t + .3);
+  }
+  // Vent (bruit blanc filtré)
+  const windBuf = ctx.createBuffer(1, ctx.sampleRate * duration, ctx.sampleRate);
+  const wd = windBuf.getChannelData(0);
+  for (let i = 0; i < wd.length; i++) wd[i] = (Math.random() * 2 - 1);
+  const ws = ctx.createBufferSource(), wf = ctx.createBiquadFilter(), wg = ctx.createGain();
+  wf.type = 'lowpass'; wf.frequency.value = 400;
+  ws.buffer = windBuf; ws.connect(wf); wf.connect(wg); wg.connect(master);
+  wg.gain.value = .05;
+  ws.start(now);
+}
+
+function vgClassicalAudio(ctx, master, duration) {
+  const now = ctx.currentTime + .1;
+  const beat = 60 / 80;
+  const melody = [261, 293, 329, 349, 392, 349, 329, 293, 261, 220, 261, 293, 329, 293, 261];
+  const bass =   [130, 130, 146, 174, 196, 174, 146, 130, 130, 110, 130, 130, 146, 146, 130];
+  function classNote(t, freq, dur, vol, wave='sine') {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = wave; o.frequency.value = freq;
+    o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + .05);
+    g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.start(t); o.stop(t + dur + .1);
+  }
+  for (let rep = 0; rep * melody.length * beat < duration; rep++) {
+    melody.forEach((freq, i) => {
+      const t = now + (rep * melody.length + i) * beat;
+      classNote(t, freq, beat * .9, .1, 'sine');
+      classNote(t, bass[i], beat * .9, .12, 'triangle');
+      classNote(t, freq * 1.5, beat * .4, .04, 'sine');
+    });
+  }
+}
+
+function vgGamingAudio(ctx, master, duration) {
+  const now = ctx.currentTime + .1;
+  const beat = 60 / 120;
+  const melody = [523, 659, 784, 659, 523, 440, 523, 659, 784, 1047, 784, 659];
+  const bass8 =  [262, 262, 392, 392, 262, 220, 262, 262, 392, 524, 392, 330];
+  function sq(t, freq, dur, vol=.1) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.start(t); o.stop(t + dur + .02);
+  }
+  function blip(t) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.setValueAtTime(880, t);
+    o.frequency.exponentialRampToValueAtTime(220, t + .05);
+    o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(.15, t); g.gain.exponentialRampToValueAtTime(.001, t + .05);
+    o.start(t); o.stop(t + .06);
+  }
+  for (let rep = 0; rep * melody.length * beat < duration; rep++) {
+    melody.forEach((freq, i) => {
+      const t = now + (rep * melody.length + i) * beat;
+      sq(t, freq, beat * .8, .1);
+      sq(t, bass8[i], beat * .9, .12);
+      if (i % 4 === 0) blip(t);
+    });
   }
 }
 
@@ -2387,8 +2878,63 @@ async function vsPublishYT() {
   }
 }
 
-function vsPublishSoon(platform) {
-  toast(`Publication ${platform} — bientôt disponible !`, 'inf');
+async function vsPublishTT() {
+  if (!VG.blob) { toast('Génère une vidéo d\'abord', 'err'); return; }
+  const title = document.getElementById('vg-title').value.trim() || 'CRÉA-ACTION';
+  const btn = document.getElementById('vg-pub-tt');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> TikTok...';
+  document.getElementById('vg-pub-status').textContent = '⏳ Envoi vers TikTok...';
+  try {
+    const fd = new FormData();
+    fd.append('video', VG.blob, 'video.webm');
+    fd.append('title', title);
+    const resp = await fetch('/auth/tiktok/publish-video', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('ca_token') },
+      body: fd
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || 'Erreur TikTok');
+    document.getElementById('vg-pub-status').textContent = '✅ ' + (data.message || 'Publié sur TikTok !');
+    toast('Vidéo publiée sur TikTok !', 'ok');
+    vgPipeStep(3, 'ok');
+  } catch(e) {
+    document.getElementById('vg-pub-status').textContent = '❌ ' + e.message;
+    toast('TikTok : ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fab fa-tiktok"></i> TikTok';
+  }
+}
+
+async function vsPublishIG() {
+  if (!VG.blob) { toast('Génère une vidéo d\'abord', 'err'); return; }
+  const caption = document.getElementById('vg-title').value.trim() || 'CRÉA-ACTION';
+  const btn = document.getElementById('vg-pub-ig');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Instagram...';
+  document.getElementById('vg-pub-status').textContent = '⏳ Envoi vers Instagram...';
+  try {
+    const fd = new FormData();
+    fd.append('video', VG.blob, 'video.webm');
+    fd.append('caption', caption);
+    const resp = await fetch('/auth/meta/instagram/publish-video', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('ca_token') },
+      body: fd
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || 'Erreur Instagram');
+    document.getElementById('vg-pub-status').textContent = '✅ ' + (data.message || 'Publié sur Instagram !');
+    toast('Reel publié sur Instagram !', 'ok');
+  } catch(e) {
+    document.getElementById('vg-pub-status').textContent = '❌ ' + e.message;
+    toast('Instagram : ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fab fa-instagram"></i> Instagram';
+  }
 }
 
 function vsImport() { document.getElementById('vs-file').click(); }
@@ -2829,12 +3375,24 @@ async function psFetchTrends() {
 }
 
 async function psDetectTrends() {
+  const niche = (document.getElementById('ps-niche-input')?.value.trim()) || 'contenu digital général';
+  const platformsRaw = document.getElementById('ps-platforms-select')?.value || 'YouTube,TikTok,Instagram';
+  const platforms = platformsRaw.split(',');
+  const btn = document.getElementById('ps-detect-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyse...'; }
   toast('Détection IA en cours...', 'inf');
   try {
-    await api('/api/studio/trends/ai-detect', { method: 'POST' });
+    await api('/api/studio/trends/ai-detect', {
+      method: 'POST',
+      body: JSON.stringify({ niche, platforms })
+    });
     toast('Tendances détectées !', 'ok');
     await psFetchTrends();
-  } catch(e) { toast(e.message, 'err'); }
+  } catch(e) {
+    toast(e.message || 'Erreur détection IA', 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-magic"></i> Détecter avec IA'; }
+  }
 }
 
 async function psFetchIdeas() {

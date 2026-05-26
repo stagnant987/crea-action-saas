@@ -1,5 +1,6 @@
-"""CRÉA-ACTION — Point d'entrée FastAPI (v2 — avec IA + 13 plateformes)"""
+"""CRÉA-ACTION — Point d'entrée FastAPI (v3 — avec IA + 13 plateformes)"""
 import asyncio
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +20,56 @@ from routers import (
 )
 from routers.auth_users import get_current_user
 
-app = FastAPI(title="CRÉA-ACTION API v2", version="2.0.0", docs_url="/api/docs", redoc_url=None)
+
+async def _auto_sync_loop():
+    """Rafraîchit les tokens YouTube expirés toutes les heures."""
+    await asyncio.sleep(60)
+    while True:
+        try:
+            import httpx
+            from database import SessionLocal
+            from models import YouTubeAccount
+            db = SessionLocal()
+            expiry_threshold = datetime.utcnow() + timedelta(minutes=10)
+            accounts = db.query(YouTubeAccount).filter(
+                YouTubeAccount.token_expiry < expiry_threshold,
+                YouTubeAccount.refresh_token != ""
+            ).all()
+            async with httpx.AsyncClient() as client:
+                for acc in accounts:
+                    try:
+                        resp = await client.post(config.GOOGLE_TOKEN_URL, data={
+                            "client_id": config.GOOGLE_CLIENT_ID,
+                            "client_secret": config.GOOGLE_CLIENT_SECRET,
+                            "refresh_token": acc.refresh_token,
+                            "grant_type": "refresh_token",
+                        })
+                        if resp.status_code == 200:
+                            tokens = resp.json()
+                            acc.access_token = tokens["access_token"]
+                            acc.token_expiry = datetime.utcnow() + timedelta(seconds=tokens.get("expires_in", 3600))
+                            db.commit()
+                    except Exception:
+                        pass
+            db.close()
+        except Exception:
+            pass
+        await asyncio.sleep(3600)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    asyncio.create_task(_auto_sync_loop())
+    print("\n" + "-" * 60)
+    print("  CREA-ACTION v3  ->  http://localhost:8000")
+    print("  PLATEAU STUDIO | IA Claude | 13 plateformes")
+    print("  API docs : http://localhost:8000/api/docs")
+    print("-" * 60 + "\n")
+    yield
+
+
+app = FastAPI(title="CRÉA-ACTION API v3", version="3.0.0", docs_url="/api/docs", redoc_url=None, lifespan=lifespan)
 
 # ── Gestionnaire global erreurs Anthropic ─────────────────────────────────────
 def _register_anthropic_handlers() -> None:
@@ -87,48 +137,3 @@ app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 @app.get("/", include_in_schema=False)
 def serve_frontend():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
-
-async def _auto_sync_loop():
-    """Rafraîchit les tokens YouTube expirés toutes les heures."""
-    await asyncio.sleep(60)  # Attend 1 min après démarrage
-    while True:
-        try:
-            from database import SessionLocal
-            from models import YouTubeAccount
-            import httpx
-            db = SessionLocal()
-            expiry_threshold = datetime.utcnow() + timedelta(minutes=10)
-            accounts = db.query(YouTubeAccount).filter(
-                YouTubeAccount.token_expiry < expiry_threshold,
-                YouTubeAccount.refresh_token != ""
-            ).all()
-            for acc in accounts:
-                try:
-                    resp = httpx.post(config.GOOGLE_TOKEN_URL, data={
-                        "client_id": config.GOOGLE_CLIENT_ID,
-                        "client_secret": config.GOOGLE_CLIENT_SECRET,
-                        "refresh_token": acc.refresh_token,
-                        "grant_type": "refresh_token",
-                    })
-                    if resp.status_code == 200:
-                        tokens = resp.json()
-                        acc.access_token = tokens["access_token"]
-                        acc.token_expiry = datetime.utcnow() + timedelta(seconds=tokens.get("expires_in", 3600))
-                        db.commit()
-                except Exception:
-                    pass
-            db.close()
-        except Exception:
-            pass
-        await asyncio.sleep(3600)  # Toutes les heures
-
-
-@app.on_event("startup")
-async def on_startup():
-    init_db()
-    asyncio.create_task(_auto_sync_loop())
-    print("\n" + "-" * 60)
-    print("  CREA-ACTION v3  ->  http://localhost:8000")
-    print("  PLATEAU STUDIO | IA Claude | 13 plateformes")
-    print("  API docs : http://localhost:8000/api/docs")
-    print("-" * 60 + "\n")

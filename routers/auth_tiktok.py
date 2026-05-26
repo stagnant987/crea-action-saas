@@ -9,7 +9,7 @@ import httpx
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -154,6 +154,73 @@ def update_tiktok_revenue(account_id: int, revenue: float,
     a.last_updated = datetime.utcnow()
     db.commit()
     return {"status": "ok"}
+
+
+@router.post("/publish-video")
+async def publish_tiktok_video(
+    title: str = Form(default="CRÉA-ACTION"),
+    privacy_level: str = Form(default="SELF_ONLY"),
+    video: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Publie une vidéo directement sur TikTok via le Content Posting API."""
+    account = db.query(TikTokAccount).filter_by(user_id=current_user.id).first()
+    if not account or not account.access_token:
+        raise HTTPException(404, "Aucun compte TikTok connecté — reconnecte ton compte avec les nouvelles permissions.")
+
+    content = await video.read()
+    size = len(content)
+
+    init_resp = httpx.post(
+        "https://open.tiktokapis.com/v2/post/publish/video/init/",
+        json={
+            "post_info": {
+                "title": title[:150],
+                "privacy_level": privacy_level,
+                "disable_duet": False,
+                "disable_comment": False,
+                "disable_stitch": False,
+            },
+            "source_info": {
+                "source": "FILE_UPLOAD",
+                "video_size": size,
+                "chunk_size": size,
+                "total_chunk_count": 1,
+            },
+        },
+        headers={
+            "Authorization": f"Bearer {account.access_token}",
+            "Content-Type": "application/json; charset=UTF-8",
+        },
+        timeout=30,
+    )
+
+    if init_resp.status_code != 200:
+        err = init_resp.json().get("error", {}).get("message", init_resp.text[:300])
+        raise HTTPException(400, f"TikTok init échoué : {err}")
+
+    data = init_resp.json().get("data", {})
+    upload_url = data.get("upload_url")
+    publish_id = data.get("publish_id")
+    if not upload_url:
+        raise HTTPException(400, "TikTok n'a pas retourné d'URL d'upload")
+
+    upload_resp = httpx.put(
+        upload_url,
+        content=content,
+        headers={
+            "Content-Type": "video/mp4",
+            "Content-Range": f"bytes 0-{size - 1}/{size}",
+            "Content-Length": str(size),
+        },
+        timeout=120,
+    )
+
+    if upload_resp.status_code not in (200, 201, 204):
+        raise HTTPException(400, f"Upload TikTok échoué (HTTP {upload_resp.status_code})")
+
+    return {"status": "ok", "publish_id": publish_id, "message": "Vidéo envoyée à TikTok ! Elle sera visible dans quelques minutes."}
 
 
 @router.delete("/accounts/{account_id}")

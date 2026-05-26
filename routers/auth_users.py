@@ -108,6 +108,7 @@ def get_current_user_optional(token: str = Depends(oauth2_scheme), db: Session =
 class RegisterRequest(BaseModel):
     username: str
     password: str
+    email: Optional[str] = None
 
 
 class TokenResponse(BaseModel):
@@ -121,16 +122,22 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
 
 
+class ResetPasswordRequest(BaseModel):
+    username: str
+    email: str
+    new_password: str
+
+
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/token", response_model=TokenResponse)
 def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     _check_rate_limit(request)
-    user = db.query(User).filter(User.username == form_data.username).first()
+    user = db.query(User).filter(User.email == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Identifiant ou mot de passe incorrect.",
+            detail="Email ou mot de passe incorrect.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = create_access_token({"sub": user.username})
@@ -146,7 +153,9 @@ def register(request: Request, req: RegisterRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=400, detail="Mot de passe trop court (min 6 caractères).")
     if db.query(User).filter(User.username == req.username).first():
         raise HTTPException(status_code=409, detail="Cet identifiant est déjà utilisé.")
-    user = User(username=req.username, hashed_password=hash_password(req.password))
+    if req.email and db.query(User).filter(User.email == req.email).first():
+        raise HTTPException(status_code=409, detail="Cet email est déjà utilisé.")
+    user = User(username=req.username, email=req.email, hashed_password=hash_password(req.password))
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -168,6 +177,20 @@ def change_password(req: ChangePasswordRequest, current_user: User = Depends(get
     current_user.hashed_password = hash_password(req.new_password)
     db.commit()
     return {"status": "ok", "message": "Mot de passe mis à jour."}
+
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == req.username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Identifiant introuvable.")
+    if not user.email or user.email.lower() != req.email.lower():
+        raise HTTPException(status_code=403, detail="Email incorrect pour cet identifiant.")
+    if len(req.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Mot de passe trop court (min 6 caractères).")
+    user.hashed_password = hash_password(req.new_password)
+    db.commit()
+    return {"status": "ok", "message": "Mot de passe réinitialisé."}
 
 
 @router.get("/has-users")

@@ -7,7 +7,7 @@ from models import (
     YouTubeAccount, InstagramAccount, FacebookPage, TikTokAccount,
     SnapchatAccount, PinterestAccount, TwitchAccount, TwitterAccount,
     LinkedInAccount, SpotifyAccount, PatreonAccount, SubstackNewsletter,
-    DiscordServer, DigitalProduct, RevenueHistory, User
+    DiscordServer, DigitalProduct, RevenueHistory, Goal, User
 )
 from routers.auth_users import get_current_user
 
@@ -87,11 +87,14 @@ def save_snapshot(current_user: User = Depends(get_current_user), db: Session = 
     ig_rev  = sum(a.manual_revenue    for a in db.query(InstagramAccount).filter_by(user_id=uid).all())
     tt_rev  = sum(a.manual_revenue    for a in db.query(TikTokAccount).filter_by(user_id=uid).all())
     sc_rev  = sum(a.ad_revenue        for a in db.query(SnapchatAccount).filter_by(user_id=uid).all())
+    pin_rev = sum(a.ad_revenue        for a in db.query(PinterestAccount).filter_by(user_id=uid).all())
     twi_rev = sum(a.manual_revenue    for a in db.query(TwitchAccount).filter_by(user_id=uid).all())
     tw_rev  = sum(a.manual_revenue    for a in db.query(TwitterAccount).filter_by(user_id=uid).all())
     pat_rev = sum(a.monthly_revenue   for a in db.query(PatreonAccount).filter_by(user_id=uid).all())
+    sub_rev = sum(a.monthly_revenue   for a in db.query(SubstackNewsletter).filter_by(user_id=uid).all())
+    dis_rev = sum(a.monthly_revenue   for a in db.query(DiscordServer).filter_by(user_id=uid).all())
     prod_rev= sum(p.monthly_revenue   for p in db.query(DigitalProduct).filter_by(user_id=uid).all())
-    total   = yt_rev + ig_rev + tt_rev + sc_rev + twi_rev + tw_rev + pat_rev + prod_rev
+    total   = yt_rev + ig_rev + tt_rev + sc_rev + pin_rev + twi_rev + tw_rev + pat_rev + sub_rev + dis_rev + prod_rev
 
     snap = db.query(RevenueHistory).filter_by(month=month, user_id=uid).first()
     if not snap:
@@ -104,3 +107,54 @@ def save_snapshot(current_user: User = Depends(get_current_user), db: Session = 
     snap.total = round(total, 2); snap.created_at = datetime.utcnow()
     db.commit()
     return {"status": "ok", "month": month, "total": total}
+
+
+@router.post("/sync-goals")
+def sync_goals(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Synchronise les objectifs avec le revenu total actuel et auto-snapshot mensuel."""
+    uid = current_user.id
+    month = datetime.utcnow().strftime("%Y-%m")
+
+    # Calcul du revenu total
+    yt_rev  = sum(a.estimated_revenue for a in db.query(YouTubeAccount).filter_by(user_id=uid).all())
+    ig_rev  = sum(a.manual_revenue    for a in db.query(InstagramAccount).filter_by(user_id=uid).all())
+    tt_rev  = sum(a.manual_revenue    for a in db.query(TikTokAccount).filter_by(user_id=uid).all())
+    sc_rev  = sum(a.ad_revenue        for a in db.query(SnapchatAccount).filter_by(user_id=uid).all())
+    pin_rev = sum(a.ad_revenue        for a in db.query(PinterestAccount).filter_by(user_id=uid).all())
+    twi_rev = sum(a.manual_revenue    for a in db.query(TwitchAccount).filter_by(user_id=uid).all())
+    tw_rev  = sum(a.manual_revenue    for a in db.query(TwitterAccount).filter_by(user_id=uid).all())
+    pat_rev = sum(a.monthly_revenue   for a in db.query(PatreonAccount).filter_by(user_id=uid).all())
+    sub_rev = sum(a.monthly_revenue   for a in db.query(SubstackNewsletter).filter_by(user_id=uid).all())
+    dis_rev = sum(a.monthly_revenue   for a in db.query(DiscordServer).filter_by(user_id=uid).all())
+    prod_rev= sum(p.monthly_revenue   for p in db.query(DigitalProduct).filter_by(user_id=uid).all())
+    total   = round(yt_rev + ig_rev + tt_rev + sc_rev + pin_rev + twi_rev + tw_rev + pat_rev + sub_rev + dis_rev + prod_rev, 2)
+
+    # Auto-snapshot mensuel si absent
+    if not db.query(RevenueHistory).filter_by(month=month, user_id=uid).first():
+        snap = RevenueHistory(month=month, user_id=uid,
+            youtube=round(yt_rev,2), instagram=round(ig_rev,2), tiktok=round(tt_rev,2),
+            snapchat=round(sc_rev,2), twitch=round(twi_rev,2), twitter=round(tw_rev,2),
+            patreon=round(pat_rev,2), products=round(prod_rev,2), total=total,
+            created_at=datetime.utcnow())
+        db.add(snap)
+
+    # Mise à jour des objectifs
+    goals = db.query(Goal).filter_by(user_id=uid).all()
+    result = []
+    for g in goals:
+        was_achieved = g.current_amount >= g.target_amount and g.target_amount > 0
+        g.current_amount = total
+        newly_achieved = (not was_achieved) and total >= g.target_amount and g.target_amount > 0
+        pct = round(total / g.target_amount * 100, 1) if g.target_amount else 0
+        result.append({
+            "id": g.id, "title": g.title,
+            "target_amount": g.target_amount,
+            "current_amount": total,
+            "progress_pct": pct,
+            "achieved": total >= g.target_amount and g.target_amount > 0,
+            "newly_achieved": newly_achieved,
+            "deadline": g.deadline,
+        })
+
+    db.commit()
+    return {"total_revenue": total, "month": month, "goals": result}

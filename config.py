@@ -33,8 +33,8 @@ META_APP_SECRET  = os.getenv("META_APP_SECRET", "")
 META_REDIRECT_URI = f"{APP_URL}/auth/meta/callback"
 META_AUTH_URL    = "https://www.facebook.com/v18.0/dialog/oauth"
 META_TOKEN_URL   = "https://graph.facebook.com/v18.0/oauth/access_token"
-META_SCOPES = ["instagram_basic", "instagram_manage_insights", "pages_show_list",
-               "pages_read_engagement", "ads_read", "public_profile"]
+META_SCOPES = ["instagram_basic", "instagram_manage_insights", "instagram_content_publish",
+               "pages_show_list", "pages_read_engagement", "ads_read", "public_profile"]
 
 # ── TikTok ────────────────────────────────────────────────────────────────────
 TIKTOK_CLIENT_KEY    = os.getenv("TIKTOK_CLIENT_KEY", "")
@@ -42,7 +42,7 @@ TIKTOK_CLIENT_SECRET = os.getenv("TIKTOK_CLIENT_SECRET", "")
 TIKTOK_REDIRECT_URI  = f"{APP_URL}/auth/tiktok/callback"
 TIKTOK_AUTH_URL      = "https://www.tiktok.com/v2/auth/authorize/"
 TIKTOK_TOKEN_URL     = "https://open.tiktokapis.com/v2/oauth/token/"
-TIKTOK_SCOPES        = ["user.info.basic", "user.info.stats"]
+TIKTOK_SCOPES        = ["user.info.basic", "user.info.stats", "video.upload", "video.publish"]
 
 # ── Snapchat ──────────────────────────────────────────────────────────────────
 SNAPCHAT_CLIENT_ID     = os.getenv("SNAPCHAT_CLIENT_ID", "")

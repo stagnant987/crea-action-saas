@@ -7,7 +7,9 @@ import httpx
 from datetime import datetime
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+import os
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -152,6 +154,66 @@ def update_instagram_revenue(account_id: int, revenue: float,
     a.last_updated = datetime.utcnow()
     db.commit()
     return {"status": "ok"}
+
+
+@router.post("/instagram/publish-video")
+async def publish_instagram_video(
+    caption: str = Form(default=""),
+    video: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Publie une vidéo (Reel) sur Instagram via le Content Publishing API."""
+    account = db.query(InstagramAccount).filter_by(user_id=current_user.id).first()
+    if not account or not account.access_token:
+        raise HTTPException(404, "Aucun compte Instagram connecté — reconnecte ton compte avec les nouvelles permissions.")
+
+    uploads_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "uploads")
+    os.makedirs(uploads_dir, exist_ok=True)
+    ext = os.path.splitext(video.filename or "video.webm")[1] or ".webm"
+    filename = f"ig_{uuid.uuid4().hex}{ext}"
+    filepath = os.path.join(uploads_dir, filename)
+
+    content = await video.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+
+    video_url = f"{config.APP_URL}/static/uploads/{filename}"
+    ig_id = account.account_id
+    token = account.access_token
+
+    try:
+        create_resp = httpx.post(
+            f"{GRAPH}/{ig_id}/media",
+            params={"media_type": "REELS", "video_url": video_url, "caption": caption, "access_token": token},
+            timeout=60,
+        )
+        if create_resp.status_code != 200:
+            err = create_resp.json().get("error", {}).get("message", create_resp.text[:300])
+            raise HTTPException(400, f"Instagram création échouée : {err}")
+
+        creation_id = create_resp.json().get("id")
+        if not creation_id:
+            raise HTTPException(400, "Instagram n'a pas retourné d'ID de création")
+
+        import time
+        time.sleep(4)
+
+        pub_resp = httpx.post(
+            f"{GRAPH}/{ig_id}/media_publish",
+            params={"creation_id": creation_id, "access_token": token},
+            timeout=30,
+        )
+        if pub_resp.status_code != 200:
+            err = pub_resp.json().get("error", {}).get("message", pub_resp.text[:300])
+            raise HTTPException(400, f"Instagram publication échouée : {err}")
+
+        return {"status": "ok", "media_id": pub_resp.json().get("id"), "message": "Reel publié sur Instagram !"}
+    finally:
+        try:
+            os.remove(filepath)
+        except Exception:
+            pass
 
 
 @router.delete("/instagram/{account_id}")

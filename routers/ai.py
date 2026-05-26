@@ -157,8 +157,9 @@ def ai_chat(request: ChatRequest, current_user: User = Depends(get_current_user)
 
     system = f"""Tu es CRÉA-IA, l'assistant IA intégré à CRÉA-ACTION — tableau de bord de revenus pour créateurs de contenu.
 Tu as accès en temps réel à toutes les données du dashboard.
-Tu parles en français, tu es concis, professionnel et bienveillant.
-Tu peux analyser les performances, suggérer des stratégies, créer des plans de contenu et donner des conseils actionnables.
+RÈGLE ABSOLUE : tu réponds TOUJOURS et UNIQUEMENT en français, peu importe la langue du message reçu. Ne jamais utiliser un seul mot anglais sauf les noms propres de plateformes (YouTube, TikTok, Instagram, etc.).
+Tu es concis, professionnel et bienveillant.
+Tu analyses les performances, suggères des stratégies, crées des plans de contenu et donnes des conseils actionnables.
 Quand tu cites des chiffres, utilise les données ci-dessous.
 
 {context}"""
@@ -188,7 +189,7 @@ def get_daily_tip(current_user: User = Depends(get_current_user), db: Session = 
     client = get_client()
     context = build_dashboard_context(db, current_user.id)
 
-    system = f"Tu es CRÉA-IA. Donne un conseil court et actionnable (3-4 phrases max) basé sur ces données :\n{context}\nFormate : 1 emoji + conseil. Pas de titre."
+    system = f"Tu es CRÉA-IA. Réponds UNIQUEMENT en français. Donne un conseil court et actionnable (3-4 phrases max) basé sur ces données :\n{context}\nFormate : 1 emoji + conseil. Pas de titre."
     tip = chat(client, system, [{"role": "user", "content": "Donne-moi le conseil du jour pour optimiser mes revenus."}], max_tokens=300)
 
     db.add(AIInsight(user_id=current_user.id, type="daily_tip", title="Conseil du jour", content=tip, month=today))
@@ -203,7 +204,7 @@ def generate_monthly_report(current_user: User = Depends(get_current_user), db: 
     context = build_dashboard_context(db, current_user.id)
     month = datetime.utcnow().strftime("%Y-%m")
 
-    system = f"Tu es CRÉA-IA, expert en monétisation pour créateurs de contenu. Génère des rapports clairs, structurés et actionnables en français.\n{context}"
+    system = f"Tu es CRÉA-IA, expert en monétisation pour créateurs de contenu. Réponds UNIQUEMENT en français. Génère des rapports clairs, structurés et actionnables.\n{context}"
     report = chat(client, system, [{"role": "user", "content": """Génère un rapport mensuel complet avec :
 1. RÉSUMÉ EXÉCUTIF (2-3 phrases)
 2. MEILLEURES PLATEFORMES ce mois

@@ -10,8 +10,8 @@ import random
 from datetime import datetime
 from typing import List, Optional
 
-import anthropic
 import httpx
+from groq import Groq
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -30,10 +30,23 @@ router = APIRouter()
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def get_client():
-    if not config.ANTHROPIC_API_KEY:
-        raise HTTPException(status_code=400, detail="ANTHROPIC_API_KEY non configuré dans .env")
-    return anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+def get_client() -> Groq:
+    if not config.GROQ_API_KEY:
+        raise HTTPException(status_code=400, detail="GROQ_API_KEY non configuré dans .env — clé gratuite sur console.groq.com")
+    return Groq(api_key=config.GROQ_API_KEY)
+
+
+def _groq_ask(client: Groq, system: str, user: str, max_tokens: int = 1500) -> str:
+    resp = client.chat.completions.create(
+        model=config.GROQ_MODEL,
+        max_tokens=max_tokens,
+        temperature=0.7,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user",   "content": user},
+        ]
+    )
+    return resp.choices[0].message.content or ""
 
 
 def build_revenue_context(db: Session, user_id: int) -> str:
@@ -160,19 +173,10 @@ def ai_detect_trends(request: AIFindTrendsRequest,
     niche_str = request.niche or "contenu digital général"
     platforms_str = ", ".join(request.platforms) if request.platforms else "TikTok, YouTube, Instagram"
 
-    response = client.messages.create(
-        model=config.ANTHROPIC_MODEL,
-        max_tokens=1500,
-        system=[{
-            "type": "text",
-            "text": f"""Tu es un expert en marketing digital et tendances virales.
-Contexte business de l'utilisateur: {rev_ctx}
-Génère des analyses de tendances concrètes et actionnables en JSON.""",
-            "cache_control": {"type": "ephemeral"},
-        }],
-        messages=[{
-            "role": "user",
-            "content": f"""Identifie 5 tendances rentables dans la niche "{niche_str}" sur {platforms_str}.
+    raw = _groq_ask(
+        client,
+        system=f"Tu es un expert en marketing digital et tendances virales. Réponds UNIQUEMENT en français sauf les noms de plateformes.\nContexte business de l'utilisateur: {rev_ctx}\nGénère des analyses de tendances concrètes et actionnables en JSON.",
+        user=f"""Identifie 5 tendances rentables dans la niche "{niche_str}" sur {platforms_str}.
 
 Pour chaque tendance, retourne un JSON avec ces champs EXACTEMENT :
 {{
@@ -181,19 +185,17 @@ Pour chaque tendance, retourne un JSON avec ces champs EXACTEMENT :
       "niche": "nom de la niche",
       "platform": "plateforme principale",
       "description": "description de la tendance (2-3 phrases)",
-      "revenue_potential": 8,  // 1-10
-      "competition": 4,        // 1-10 (10 = très concurrentiel)
-      "ease": 7,               // 1-10 (10 = très facile)
-      "score": 75              // score global 0-100
+      "revenue_potential": 8,
+      "competition": 4,
+      "ease": 7,
+      "score": 75
     }}
   ]
 }}
 
 Sois précis, chiffré, et focus sur la monétisation maximale.""",
-        }],
+        max_tokens=1500,
     )
-
-    raw = response.content[0].text
     # Essayer de parser le JSON
     import json, re
     try:
@@ -303,12 +305,10 @@ def analyze_experiment(exp_id: int, current_user: User = Depends(get_current_use
         raise HTTPException(status_code=404, detail="Expérience introuvable")
 
     client = get_client()
-    response = client.messages.create(
-        model=config.ANTHROPIC_MODEL,
-        max_tokens=500,
-        messages=[{
-            "role": "user",
-            "content": f"""Analyse ce test A/B et donne ta recommandation :
+    analysis = _groq_ask(
+        client,
+        system="Tu es un expert en tests A/B et optimisation de contenu digital.",
+        user=f"""Analyse ce test A/B et donne ta recommandation :
 
 Test: {e.title}
 Hypothèse: {e.hypothesis}
@@ -318,10 +318,8 @@ Plateforme: {e.platform}
 
 Réponds en 3-4 phrases max. Détermine quelle variante est probablement gagnante et pourquoi.
 Termine par "GAGNANT: A" ou "GAGNANT: B" ou "GAGNANT: ÉGALITÉ".""",
-        }],
+        max_tokens=500,
     )
-
-    analysis = response.content[0].text
     winner = "none"
     if "GAGNANT: A" in analysis:
         winner = "a"
@@ -396,25 +394,18 @@ def ai_generate_content(request: AIGenerateContentRequest,
     rev_ctx = build_revenue_context(db, current_user.id)
 
     type_prompts = {
-        "video": f"Script vidéo complet avec accroche, développement et call-to-action",
-        "post": f"Post réseaux sociaux optimisé avec hashtags et émojis",
-        "visual": f"Concept visuel détaillé (description, palette, message clé)",
-        "product": f"Fiche produit digital complète (titre, description, prix suggéré, arguments de vente)",
-        "email": f"Email marketing complet (objet, corps, CTA)",
+        "video": "Script vidéo complet avec accroche, développement et call-to-action",
+        "post": "Post réseaux sociaux optimisé avec hashtags et émojis",
+        "visual": "Concept visuel détaillé (description, palette, message clé)",
+        "product": "Fiche produit digital complète (titre, description, prix suggéré, arguments de vente)",
+        "email": "Email marketing complet (objet, corps, CTA)",
     }
     format_prompt = type_prompts.get(request.content_type, "Contenu optimisé")
 
-    response = client.messages.create(
-        model=config.ANTHROPIC_MODEL,
-        max_tokens=1500,
-        system=[{
-            "type": "text",
-            "text": f"Tu es un expert en création de contenu digital viral et en monétisation. {rev_ctx}",
-            "cache_control": {"type": "ephemeral"},
-        }],
-        messages=[{
-            "role": "user",
-            "content": f"""Génère un {format_prompt} pour :
+    generated = _groq_ask(
+        client,
+        system=f"Tu es un expert en création de contenu digital viral et en monétisation. {rev_ctx}",
+        user=f"""Génère un {format_prompt} pour :
 
 Titre/Idée : {request.title}
 Plateforme : {request.platform}
@@ -422,10 +413,8 @@ Ton : {request.tone}
 Brief : {request.brief or "Aucun brief supplémentaire"}
 
 Optimise pour la viralité et la monétisation maximale.""",
-        }],
+        max_tokens=1500,
     )
-
-    generated = response.content[0].text
 
     idea = ContentIdea(
         title=request.title,
@@ -451,17 +440,10 @@ def ai_batch_generate(current_user: User = Depends(get_current_user), db: Sessio
     client = get_client()
     rev_ctx = build_revenue_context(db, current_user.id)
 
-    response = client.messages.create(
-        model=config.ANTHROPIC_MODEL,
-        max_tokens=2000,
-        system=[{
-            "type": "text",
-            "text": f"Tu es un stratège en contenu digital. {rev_ctx}",
-            "cache_control": {"type": "ephemeral"},
-        }],
-        messages=[{
-            "role": "user",
-            "content": """Génère 5 idées de contenu à fort potentiel de revenu.
+    ideas = _groq_ask(
+        client,
+        system=f"Tu es un stratège en contenu digital. {rev_ctx}",
+        user="""Génère 5 idées de contenu à fort potentiel de revenu.
 Pour chaque idée, donne :
 1. **TITRE** : Accroche clé
 2. **PLATEFORME** : TikTok / YouTube / Instagram / etc.
@@ -470,10 +452,9 @@ Pour chaque idée, donne :
 5. **STRATÉGIE** : 2 phrases sur comment monétiser
 
 Focus sur ce qui peut générer des revenus rapidement.""",
-        }],
+        max_tokens=2000,
     )
-
-    return {"ideas": response.content[0].text}
+    return {"ideas": ideas}
 
 
 def _idea_dict(i):
@@ -535,19 +516,10 @@ def ai_scan_opportunities(current_user: User = Depends(get_current_user), db: Se
     client = get_client()
     rev_ctx = build_revenue_context(db, current_user.id)
 
-    response = client.messages.create(
-        model=config.ANTHROPIC_MODEL,
-        max_tokens=2000,
-        system=[{
-            "type": "text",
-            "text": f"""Tu es un consultant expert en monétisation digitale et machine à cash.
-Analyse les données et identifie les opportunités business les plus rentables IMMÉDIATEMENT.
-{rev_ctx}""",
-            "cache_control": {"type": "ephemeral"},
-        }],
-        messages=[{
-            "role": "user",
-            "content": """Scanne et identifie les 5 meilleures opportunités de revenus disponibles MAINTENANT.
+    analysis = _groq_ask(
+        client,
+        system=f"Tu es un consultant expert en monétisation digitale et machine à cash.\nAnalyse les données et identifie les opportunités business les plus rentables IMMÉDIATEMENT.\n{rev_ctx}",
+        user="""Scanne et identifie les 5 meilleures opportunités de revenus disponibles MAINTENANT.
 
 Pour chaque opportunité, structure ta réponse ainsi :
 
@@ -562,15 +534,14 @@ Pourquoi maintenant: [2 phrases max]
 ---
 
 Base ton analyse sur les données de revenus existantes et les tendances actuelles du marché digital.""",
-        }],
+        max_tokens=2000,
     )
-
-    analysis = response.content[0].text
 
     db.add(AIInsight(
         type="opportunities_scan",
         title=f"Scan opportunités — {datetime.utcnow().strftime('%Y-%m-%d')}",
         content=analysis,
+        user_id=current_user.id,
     ))
     db.commit()
 
@@ -583,23 +554,14 @@ def ai_optimize_strategy(current_user: User = Depends(get_current_user), db: Ses
     client = get_client()
     rev_ctx = build_revenue_context(db, current_user.id)
 
-    trends_count   = db.query(TrendAnalysis).filter_by(status="active", user_id=current_user.id).count()
-    experiments    = db.query(ABExperiment).filter_by(status="running", user_id=current_user.id).count()
-    ideas_count    = db.query(ContentIdea).filter_by(status="draft", user_id=current_user.id).count()
+    trends_count = db.query(TrendAnalysis).filter_by(status="active", user_id=current_user.id).count()
+    experiments  = db.query(ABExperiment).filter_by(status="running", user_id=current_user.id).count()
+    ideas_count  = db.query(ContentIdea).filter_by(status="draft", user_id=current_user.id).count()
 
-    response = client.messages.create(
-        model=config.ANTHROPIC_MODEL,
-        max_tokens=2000,
-        system=[{
-            "type": "text",
-            "text": f"""Tu es CRÉA-IA, la machine à cash. Tu optimises en continu pour maximiser les revenus.
-{rev_ctx}
-Plateau Studio: {trends_count} tendances actives, {experiments} expériences en cours, {ideas_count} idées en draft.""",
-            "cache_control": {"type": "ephemeral"},
-        }],
-        messages=[{
-            "role": "user",
-            "content": """Génère un plan d'optimisation complet avec :
+    plan = _groq_ask(
+        client,
+        system=f"Tu es CRÉA-IA, la machine à cash. Tu optimises en continu pour maximiser les revenus.\n{rev_ctx}\nPlateau Studio: {trends_count} tendances actives, {experiments} expériences en cours, {ideas_count} idées en draft.",
+        user="""Génère un plan d'optimisation complet avec :
 
 ## 🚀 ACTIONS PRIORITAIRES (Cette semaine)
 [3 actions concrètes avec impact estimé]
@@ -615,15 +577,14 @@ Plateau Studio: {trends_count} tendances actives, {experiments} expériences en 
 
 ## 📊 MÉTRIQUES À SURVEILLER
 [Quoi mesurer pour savoir si ça fonctionne]""",
-        }],
+        max_tokens=2000,
     )
-
-    plan = response.content[0].text
 
     db.add(AIInsight(
         type="optimization_plan",
         title=f"Plan optimisation — {datetime.utcnow().strftime('%Y-%m-%d')}",
         content=plan,
+        user_id=current_user.id,
     ))
     db.commit()
 
@@ -720,12 +681,10 @@ def ai_video_idea(request: AIVideoIdeaRequest,
     client = get_client()
     niche = request.niche or "motivation, business digital, astuces créateur"
 
-    response = client.messages.create(
-        model=config.ANTHROPIC_MODEL,
-        max_tokens=600,
-        messages=[{
-            "role": "user",
-            "content": f"""Tu es un expert en contenu viral sur {request.platform}. Génère une idée de vidéo courte (30-60s) très susceptible d'être vue massivement.
+    raw = _groq_ask(
+        client,
+        system=f"Tu es un expert en contenu viral sur {request.platform}. Réponds UNIQUEMENT en JSON valide.",
+        user=f"""Génère une idée de vidéo courte (30-60s) très susceptible d'être vue massivement.
 
 Niche: {niche}
 
@@ -740,18 +699,16 @@ Réponds UNIQUEMENT en JSON valide (aucun texte avant ni après):
   "key_points": ["Point 1 très court", "Point 2 très court", "Point 3 très court"]
 }}
 
-Règles: theme doit être parmi cyberpunk/lofi/fire/nature/minimal, sound parmi lofi/electronic/hiphop/ambient.
+Règles: theme doit être parmi cyberpunk/lofi/fire/nature/minimal/goldRush/ocean/synthwave/bloodMoon/arctic/matrix, sound parmi lofi/electronic/hiphop/ambient.
 Les key_points sont des conseils/faits impactants max 28 chars chacun.""",
-        }],
+        max_tokens=600,
     )
-
-    raw = response.content[0].text
     import json, re
     try:
         m = re.search(r'\{.*\}', raw, re.DOTALL)
         if m:
             data = json.loads(m.group())
-            if data.get("theme") not in {"cyberpunk", "lofi", "fire", "nature", "minimal"}:
+            if data.get("theme") not in {"cyberpunk", "lofi", "fire", "nature", "minimal", "goldRush", "ocean", "synthwave", "bloodMoon", "arctic", "matrix"}:
                 data["theme"] = "cyberpunk"
             if data.get("sound") not in {"lofi", "electronic", "hiphop", "ambient"}:
                 data["sound"] = "electronic"

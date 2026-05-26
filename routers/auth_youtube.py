@@ -282,7 +282,7 @@ def get_youtube_videos(current_user: User = Depends(get_current_user),
         items = search_resp.json().get("items", [])
         if not items:
             continue
-        video_ids = ",".join(i["id"]["videoId"] for i in items)
+        video_ids = ",".join(i["id"]["videoId"] for i in items if "videoId" in i.get("id", {}))
         # Récupère les stats pour chaque vidéo
         stats_resp = httpx.get(
             "https://www.googleapis.com/youtube/v3/videos",
