@@ -42,7 +42,7 @@ TIKTOK_CLIENT_SECRET = os.getenv("TIKTOK_CLIENT_SECRET", "")
 TIKTOK_REDIRECT_URI  = f"{APP_URL}/auth/tiktok/callback"
 TIKTOK_AUTH_URL      = "https://www.tiktok.com/v2/auth/authorize/"
 TIKTOK_TOKEN_URL     = "https://open.tiktokapis.com/v2/oauth/token/"
-TIKTOK_SCOPES        = ["user.info.basic", "user.info.stats", "video.upload", "video.publish"]
+TIKTOK_SCOPES        = ["user.info.profile", "user.info.stats", "video.list"]
 
 # ── Snapchat ──────────────────────────────────────────────────────────────────
 SNAPCHAT_CLIENT_ID     = os.getenv("SNAPCHAT_CLIENT_ID", "")
