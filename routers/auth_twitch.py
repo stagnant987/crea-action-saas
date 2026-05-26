@@ -29,7 +29,7 @@ def twitch_login(t: str = Query(default=None), db: Session = Depends(get_db)):
 @router.get("/callback")
 def twitch_callback(code: str = None, state: str = None, error: str = None, db: Session = Depends(get_db)):
     if error or not state or state not in _states:
-        return RedirectResponse(f"{config.APP_URL}/?error=twitch_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=twitch_failed")
     user_id = _states.pop(state)
 
     resp = httpx.post(config.TWITCH_TOKEN_URL, params={
@@ -37,7 +37,7 @@ def twitch_callback(code: str = None, state: str = None, error: str = None, db: 
         "code": code, "grant_type": "authorization_code", "redirect_uri": config.TWITCH_REDIRECT_URI,
     })
     if resp.status_code != 200:
-        return RedirectResponse(f"{config.APP_URL}/?error=twitch_token_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=twitch_token_failed")
     tokens = resp.json()
     access_token = tokens.get("access_token", "")
     refresh_token = tokens.get("refresh_token", "")
@@ -64,7 +64,7 @@ def twitch_callback(code: str = None, state: str = None, error: str = None, db: 
     acc.access_token = access_token; acc.refresh_token = refresh_token
     acc.followers = followers; acc.last_updated = datetime.utcnow()
     db.commit()
-    return RedirectResponse(f"{config.APP_URL}/?connected=twitch")
+    return RedirectResponse(f"{config.FRONTEND_URL}?connected=twitch")
 
 @router.get("/accounts")
 def list_twitch(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

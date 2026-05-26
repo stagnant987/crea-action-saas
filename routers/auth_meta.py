@@ -51,10 +51,10 @@ def meta_callback(code: str = None, state: str = None, error: str = None,
                   db: Session = Depends(get_db)):
     """Reçoit le code Meta et récupère les données Instagram + Facebook."""
     if error:
-        return RedirectResponse(f"{config.APP_URL}/?error=meta_denied")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=meta_denied")
 
     if not state or state not in _oauth_states:
-        return RedirectResponse(f"{config.APP_URL}/?error=meta_invalid_state")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=meta_invalid_state")
     user_id = _oauth_states.pop(state)
 
     # Échange code → token
@@ -65,7 +65,7 @@ def meta_callback(code: str = None, state: str = None, error: str = None,
         "code": code,
     })
     if resp.status_code != 200:
-        return RedirectResponse(f"{config.APP_URL}/?error=meta_token_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=meta_token_failed")
 
     access_token = resp.json().get("access_token", "")
 
@@ -122,7 +122,7 @@ def meta_callback(code: str = None, state: str = None, error: str = None,
                         ig.reach = val
 
     db.commit()
-    return RedirectResponse(f"{config.APP_URL}/?connected=meta")
+    return RedirectResponse(f"{config.FRONTEND_URL}?connected=meta")
 
 
 # ── Endpoints lecture ─────────────────────────────────────────────────────────

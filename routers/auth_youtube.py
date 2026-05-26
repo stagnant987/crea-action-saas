@@ -51,10 +51,10 @@ def youtube_callback(code: str = None, state: str = None, error: str = None,
                      db: Session = Depends(get_db)):
     """Reçoit le code d'autorisation Google et échange contre un access token."""
     if error:
-        return RedirectResponse(f"{config.APP_URL}/?error=youtube_denied")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=youtube_denied")
 
     if not state or state not in _oauth_states:
-        return RedirectResponse(f"{config.APP_URL}/?error=youtube_invalid_state")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=youtube_invalid_state")
 
     user_id = _oauth_states.pop(state)
 
@@ -68,7 +68,7 @@ def youtube_callback(code: str = None, state: str = None, error: str = None,
     }
     resp = httpx.post(config.GOOGLE_TOKEN_URL, data=token_data)
     if resp.status_code != 200:
-        return RedirectResponse(f"{config.APP_URL}/?error=youtube_token_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=youtube_token_failed")
 
     tokens = resp.json()
     access_token = tokens.get("access_token", "")
@@ -83,11 +83,11 @@ def youtube_callback(code: str = None, state: str = None, error: str = None,
         headers=headers,
     )
     if ch_resp.status_code != 200:
-        return RedirectResponse(f"{config.APP_URL}/?error=youtube_api_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=youtube_api_failed")
 
     ch_data = ch_resp.json()
     if not ch_data.get("items"):
-        return RedirectResponse(f"{config.APP_URL}/?error=youtube_no_channel")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=youtube_no_channel")
 
     item = ch_data["items"][0]
     channel_id = item["id"]
@@ -114,7 +114,7 @@ def youtube_callback(code: str = None, state: str = None, error: str = None,
     account.last_updated = datetime.utcnow()
     db.commit()
 
-    return RedirectResponse(f"{config.APP_URL}/?connected=youtube")
+    return RedirectResponse(f"{config.FRONTEND_URL}?connected=youtube")
 
 
 @router.post("/refresh/{account_id}")

@@ -29,7 +29,7 @@ def pinterest_login(t: str = Query(default=None), db: Session = Depends(get_db))
 @router.get("/callback")
 def pinterest_callback(code: str = None, state: str = None, error: str = None, db: Session = Depends(get_db)):
     if error or not state or state not in _states:
-        return RedirectResponse(f"{config.APP_URL}/?error=pinterest_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=pinterest_failed")
     user_id = _states.pop(state)
 
     credentials = base64.b64encode(f"{config.PINTEREST_APP_ID}:{config.PINTEREST_APP_SECRET}".encode()).decode()
@@ -37,7 +37,7 @@ def pinterest_callback(code: str = None, state: str = None, error: str = None, d
                       headers={"Authorization": f"Basic {credentials}", "Content-Type": "application/x-www-form-urlencoded"},
                       data={"grant_type": "authorization_code", "code": code, "redirect_uri": config.PINTEREST_REDIRECT_URI})
     if resp.status_code != 200:
-        return RedirectResponse(f"{config.APP_URL}/?error=pinterest_token_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=pinterest_token_failed")
     tokens = resp.json()
     access_token = tokens.get("access_token", "")
     refresh_token = tokens.get("refresh_token", "")
@@ -58,7 +58,7 @@ def pinterest_callback(code: str = None, state: str = None, error: str = None, d
     acc.access_token = access_token; acc.refresh_token = refresh_token
     acc.followers = followers; acc.last_updated = datetime.utcnow()
     db.commit()
-    return RedirectResponse(f"{config.APP_URL}/?connected=pinterest")
+    return RedirectResponse(f"{config.FRONTEND_URL}?connected=pinterest")
 
 @router.get("/accounts")
 def list_pinterest(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

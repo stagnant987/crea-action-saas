@@ -29,7 +29,7 @@ def snapchat_login(t: str = Query(default=None), db: Session = Depends(get_db)):
 @router.get("/callback")
 def snapchat_callback(code: str = None, state: str = None, error: str = None, db: Session = Depends(get_db)):
     if error or not state or state not in _states:
-        return RedirectResponse(f"{config.APP_URL}/?error=snapchat_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=snapchat_failed")
     user_id = _states.pop(state)
 
     resp = httpx.post(config.SNAPCHAT_TOKEN_URL, data={
@@ -37,7 +37,7 @@ def snapchat_callback(code: str = None, state: str = None, error: str = None, db
         "code": code, "grant_type": "authorization_code", "redirect_uri": config.SNAPCHAT_REDIRECT_URI,
     })
     if resp.status_code != 200:
-        return RedirectResponse(f"{config.APP_URL}/?error=snapchat_token_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=snapchat_token_failed")
     tokens = resp.json()
     access_token = tokens.get("access_token", "")
     refresh_token = tokens.get("refresh_token", "")
@@ -57,7 +57,7 @@ def snapchat_callback(code: str = None, state: str = None, error: str = None, db
     acc.refresh_token = refresh_token
     acc.last_updated = datetime.utcnow()
     db.commit()
-    return RedirectResponse(f"{config.APP_URL}/?connected=snapchat")
+    return RedirectResponse(f"{config.FRONTEND_URL}?connected=snapchat")
 
 @router.get("/accounts")
 def list_snapchat(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

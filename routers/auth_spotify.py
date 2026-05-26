@@ -29,7 +29,7 @@ def spotify_login(t: str = Query(default=None), db: Session = Depends(get_db)):
 @router.get("/callback")
 def spotify_callback(code: str = None, state: str = None, error: str = None, db: Session = Depends(get_db)):
     if error or not state or state not in _states:
-        return RedirectResponse(f"{config.APP_URL}/?error=spotify_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=spotify_failed")
     user_id = _states.pop(state)
 
     creds = base64.b64encode(f"{config.SPOTIFY_CLIENT_ID}:{config.SPOTIFY_CLIENT_SECRET}".encode()).decode()
@@ -37,7 +37,7 @@ def spotify_callback(code: str = None, state: str = None, error: str = None, db:
                       headers={"Authorization": f"Basic {creds}", "Content-Type": "application/x-www-form-urlencoded"},
                       data={"grant_type": "authorization_code", "code": code, "redirect_uri": config.SPOTIFY_REDIRECT_URI})
     if resp.status_code != 200:
-        return RedirectResponse(f"{config.APP_URL}/?error=spotify_token_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=spotify_token_failed")
     tokens = resp.json()
     access_token = tokens.get("access_token", "")
     refresh_token = tokens.get("refresh_token", "")
@@ -58,7 +58,7 @@ def spotify_callback(code: str = None, state: str = None, error: str = None, db:
     acc.access_token = access_token; acc.refresh_token = refresh_token
     acc.followers = followers; acc.last_updated = datetime.utcnow()
     db.commit()
-    return RedirectResponse(f"{config.APP_URL}/?connected=spotify")
+    return RedirectResponse(f"{config.FRONTEND_URL}?connected=spotify")
 
 @router.get("/accounts")
 def list_spotify(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

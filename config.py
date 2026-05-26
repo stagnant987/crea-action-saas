@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 APP_URL = os.getenv("APP_URL", "http://localhost:8000")
+FRONTEND_URL = f"{APP_URL}/app"
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-prod")
 
 # ── IA Anthropic ──────────────────────────────────────────────────────────────

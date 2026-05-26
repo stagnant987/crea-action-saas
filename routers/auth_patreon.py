@@ -29,7 +29,7 @@ def patreon_login(t: str = Query(default=None), db: Session = Depends(get_db)):
 @router.get("/callback")
 def patreon_callback(code: str = None, state: str = None, error: str = None, db: Session = Depends(get_db)):
     if error or not state or state not in _states:
-        return RedirectResponse(f"{config.APP_URL}/?error=patreon_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=patreon_failed")
     user_id = _states.pop(state)
 
     resp = httpx.post(config.PATREON_TOKEN_URL, data={
@@ -38,7 +38,7 @@ def patreon_callback(code: str = None, state: str = None, error: str = None, db:
         "redirect_uri": config.PATREON_REDIRECT_URI,
     })
     if resp.status_code != 200:
-        return RedirectResponse(f"{config.APP_URL}/?error=patreon_token_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=patreon_token_failed")
     tokens = resp.json()
     access_token = tokens.get("access_token", "")
     refresh_token = tokens.get("refresh_token", "")
@@ -78,7 +78,7 @@ def patreon_callback(code: str = None, state: str = None, error: str = None, db:
     acc.patron_count = patron_count; acc.monthly_revenue = monthly_revenue
     acc.last_updated = datetime.utcnow()
     db.commit()
-    return RedirectResponse(f"{config.APP_URL}/?connected=patreon")
+    return RedirectResponse(f"{config.FRONTEND_URL}?connected=patreon")
 
 @router.get("/accounts")
 def list_patreon(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

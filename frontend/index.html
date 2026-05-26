@@ -447,7 +447,7 @@ tbody td{padding:9px 11px}
       <div class="fg_">
         <label class="fl">Mot de passe</label>
         <div class="pass-wrap">
-          <input class="fi" id="auth-login-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+          <input class="fi" id="auth-login-pass" type="password" placeholder="••••••••" autocomplete="off">
           <button class="pass-eye" type="button" onclick="togglePass('auth-login-pass',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
         </div>
         <span class="forgot-link" onclick="openResetModal()">Mot de passe oublié ?</span>
@@ -2211,6 +2211,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   handleURL();
   updateMobileNav();
   setInterval(updateDate,60000);
+  const _tp = new URLSearchParams(location.search).get('t');
+  if (_tp) { authSetToken(_tp, 'land'); history.replaceState({}, '', '/'); }
   authCheck();
 });
 

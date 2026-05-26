@@ -35,7 +35,7 @@ def twitter_login(t: str = Query(default=None), db: Session = Depends(get_db)):
 @router.get("/callback")
 def twitter_callback(code: str = None, state: str = None, error: str = None, db: Session = Depends(get_db)):
     if error or not state or state not in _states:
-        return RedirectResponse(f"{config.APP_URL}/?error=twitter_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=twitter_failed")
     user_id = _states.pop(state)
     verifier = _verifiers.pop(state, "")
 
@@ -44,7 +44,7 @@ def twitter_callback(code: str = None, state: str = None, error: str = None, db:
                       data={"grant_type": "authorization_code", "code": code,
                             "redirect_uri": config.TWITTER_REDIRECT_URI, "code_verifier": verifier})
     if resp.status_code != 200:
-        return RedirectResponse(f"{config.APP_URL}/?error=twitter_token_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=twitter_token_failed")
     tokens = resp.json()
     access_token = tokens.get("access_token", "")
     refresh_token = tokens.get("refresh_token", "")
@@ -66,7 +66,7 @@ def twitter_callback(code: str = None, state: str = None, error: str = None, db:
     acc.access_token = access_token; acc.refresh_token = refresh_token
     acc.followers = followers; acc.last_updated = datetime.utcnow()
     db.commit()
-    return RedirectResponse(f"{config.APP_URL}/?connected=twitter")
+    return RedirectResponse(f"{config.FRONTEND_URL}?connected=twitter")
 
 @router.get("/accounts")
 def list_twitter(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

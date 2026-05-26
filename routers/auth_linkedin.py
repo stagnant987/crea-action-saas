@@ -30,7 +30,7 @@ def linkedin_login(t: str = Query(default=None), db: Session = Depends(get_db)):
 @router.get("/callback")
 def linkedin_callback(code: str = None, state: str = None, error: str = None, db: Session = Depends(get_db)):
     if error or not state or state not in _states:
-        return RedirectResponse(f"{config.APP_URL}/?error=linkedin_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=linkedin_failed")
     user_id = _states.pop(state)
 
     resp = httpx.post(config.LINKEDIN_TOKEN_URL, data={
@@ -39,7 +39,7 @@ def linkedin_callback(code: str = None, state: str = None, error: str = None, db
         "redirect_uri": config.LINKEDIN_REDIRECT_URI,
     }, headers={"Content-Type": "application/x-www-form-urlencoded"})
     if resp.status_code != 200:
-        return RedirectResponse(f"{config.APP_URL}/?error=linkedin_token_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=linkedin_token_failed")
     access_token = resp.json().get("access_token", "")
 
     me_resp = httpx.get("https://api.linkedin.com/v2/me",
@@ -55,7 +55,7 @@ def linkedin_callback(code: str = None, state: str = None, error: str = None, db
         db.add(acc)
     acc.name = name; acc.access_token = access_token; acc.last_updated = datetime.utcnow()
     db.commit()
-    return RedirectResponse(f"{config.APP_URL}/?connected=linkedin")
+    return RedirectResponse(f"{config.FRONTEND_URL}?connected=linkedin")
 
 @router.get("/accounts")
 def list_linkedin(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

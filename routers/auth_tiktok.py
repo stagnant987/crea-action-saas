@@ -65,10 +65,10 @@ def tiktok_callback(code: str = None, state: str = None, error: str = None,
                     db: Session = Depends(get_db)):
     """Reçoit le code TikTok et récupère les infos du créateur."""
     if error:
-        return RedirectResponse(f"{config.APP_URL}/?error=tiktok_denied")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=tiktok_denied")
 
     if not state or state not in _oauth_states:
-        return RedirectResponse(f"{config.APP_URL}/?error=tiktok_invalid_state")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=tiktok_invalid_state")
 
     user_id = _oauth_states.pop(state)
     verifier = _code_verifiers.pop(state, "")
@@ -84,7 +84,7 @@ def tiktok_callback(code: str = None, state: str = None, error: str = None,
     }, headers={"Content-Type": "application/x-www-form-urlencoded"})
 
     if resp.status_code != 200:
-        return RedirectResponse(f"{config.APP_URL}/?error=tiktok_token_failed")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=tiktok_token_failed")
 
     token_json = resp.json()
     data = token_json.get("data", token_json)  # certaines réponses ne sont pas nestées sous "data"
@@ -96,7 +96,7 @@ def tiktok_callback(code: str = None, state: str = None, error: str = None,
     if not access_token or not open_id:
         err = token_json.get("error", {})
         err_msg = err.get("message", "token vide") if isinstance(err, dict) else str(err)
-        return RedirectResponse(f"{config.APP_URL}/?error=tiktok_token_failed&detail={err_msg[:80]}")
+        return RedirectResponse(f"{config.FRONTEND_URL}?error=tiktok_token_failed&detail={err_msg[:80]}")
 
     # Récupère le profil
     display_name = ""
@@ -132,7 +132,7 @@ def tiktok_callback(code: str = None, state: str = None, error: str = None,
     account.last_updated = datetime.utcnow()
     db.commit()
 
-    return RedirectResponse(f"{config.APP_URL}/?connected=tiktok")
+    return RedirectResponse(f"{config.FRONTEND_URL}?connected=tiktok")
 
 
 @router.get("/videos")
