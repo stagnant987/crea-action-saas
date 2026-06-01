@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram Studio — CRÉA-ACTION</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .ig-header { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+    .ig-logo { background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4); color:#fff; font-weight:900; font-size:13px; padding:6px 12px; border-radius:6px; }
+    .ig-title { font-size:22px; font-weight:800; }
+    .ig-sub { color:var(--text-muted); font-size:13px; }
+    .ig-kpi { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+    .ig-kpi-card { background:var(--bg2); border:1px solid var(--border); border-left:4px solid #dd2a7b; border-radius:var(--radius); padding:14px; }
+    .ig-kpi-card .kpi-label { font-size:11px; color:var(--text-muted); margin-bottom:4px; }
+    .ig-kpi-card .kpi-value { font-size:22px; font-weight:800; color:var(--text-muted); }
+    .ig-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+    .empty-ig { display:flex; flex-direction:column; align-items:center; padding:32px; color:var(--text-muted); gap:8px; }
+    .empty-ig span { font-size:32px; opacity:0.25; }
+    .empty-ig p { font-size:13px; }
+  </style>
+</head>
+<body class="dashboard-page">
+  <div class="topbar">
+    <div class="topbar-brand">CRÉA<span>ACTION</span></div>
+    <nav class="topbar-nav">
+      <a href="index.html">✦ ARIA</a>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="youtube.html">🎬 YouTube</a>
+      <a href="tiktok.html">🎵 TikTok</a>
+      <a href="instagram.html" class="active">📸 Instagram</a>
+    </nav>
+    <div class="topbar-user">
+      <div class="topbar-avatar">L</div>
+      <div class="topbar-name">land</div>
+    </div>
+  </div>
+
+  <main class="dashboard-main full-main">
+    <div class="ig-header">
+      <div class="ig-logo">📸 Instagram</div>
+      <div>
+        <div class="ig-title">Instagram Studio</div>
+        <div class="ig-sub">Gère tes posts et reels depuis CRÉA-ACTION</div>
+      </div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(221,42,123,0.07),rgba(129,52,175,0.05));border:1px solid rgba(221,42,123,0.2);border-radius:var(--radius);padding:20px 28px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:16px;font-weight:800;margin-bottom:4px;">Ton compte Instagram</div>
+        <div style="font-size:13px;color:var(--text-muted);">Intégration API en cours de développement</div>
+      </div>
+      <button style="background:linear-gradient(135deg,#f58529,#dd2a7b);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">🔗 Connecter Instagram</button>
+    </div>
+
+    <div class="ig-kpi">
+      <div class="ig-kpi-card"><div class="kpi-label">Abonnés</div><div class="kpi-value">—</div></div>
+      <div class="ig-kpi-card"><div class="kpi-label">Portée ce mois</div><div class="kpi-value">—</div></div>
+      <div class="ig-kpi-card"><div class="kpi-label">Interactions</div><div class="kpi-value">—</div></div>
+      <div class="ig-kpi-card"><div class="kpi-label">Posts publiés</div><div class="kpi-value">—</div></div>
+    </div>
+
+    <div class="ig-row">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header"><h2>Galerie de posts</h2></div>
+        <div class="empty-ig"><span>📸</span><p>API Instagram en cours de développement</p></div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header"><h2>Reels</h2></div>
+        <div class="empty-ig"><span>🎞️</span><p>API Instagram en cours de développement</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>Stories</h2></div>
+      <div class="empty-ig"><span>⭕</span><p>API Instagram en cours de développement</p></div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script src="ia-assistant.js"></script>
+</body>
+</html>

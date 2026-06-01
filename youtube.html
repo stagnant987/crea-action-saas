@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Studio — CRÉA-ACTION</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .yt-header { display:flex; align-items:center; gap:16px; margin-bottom:28px; }
+    .yt-logo { background:#ff0000; color:#fff; font-weight:900; font-size:14px; padding:8px 14px; border-radius:8px; }
+    .yt-title { font-size:26px; font-weight:800; }
+    .yt-sub { color:var(--text-muted); font-size:13px; margin-top:2px; }
+    .btn-yt { background:#ff0000; color:#fff; border:none; padding:12px 28px; border-radius:8px; font-weight:700; font-size:15px; cursor:pointer; }
+    .btn-yt:hover { opacity:0.85; }
+    .yt-banner {
+      background:linear-gradient(135deg,rgba(255,0,0,0.1),rgba(255,80,0,0.05));
+      border:1px solid rgba(255,0,0,0.25); border-radius:14px;
+      padding:36px; text-align:center; margin-bottom:28px;
+    }
+    .yt-banner h2 { font-size:22px; font-weight:800; margin-bottom:10px; }
+    .yt-banner p { color:var(--text-muted); font-size:14px; margin-bottom:24px; }
+    .yt-kpi { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+    .yt-kpi-card { background:var(--bg2); border:1px solid var(--border); border-left:4px solid #ff0000; border-radius:12px; padding:18px; }
+    .yt-kpi-card .lbl { font-size:11px; color:var(--text-muted); margin-bottom:6px; }
+    .yt-kpi-card .val { font-size:26px; font-weight:800; color:var(--text-muted); }
+    .yt-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+    .empty-box { display:flex; flex-direction:column; align-items:center; padding:48px 24px; gap:10px; color:var(--text-muted); }
+    .empty-box .ico { font-size:38px; opacity:0.2; }
+    .empty-box p { font-size:13px; }
+  </style>
+</head>
+<body class="dashboard-page">
+
+  <div class="topbar">
+    <div class="topbar-brand">CRÉA<span>ACTION</span></div>
+    <nav class="topbar-nav">
+      <a href="index.html">✦ ARIA</a>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="youtube.html" class="active">🎬 YouTube</a>
+      <a href="tiktok.html">🎵 TikTok</a>
+      <a href="instagram.html">📸 Instagram</a>
+    </nav>
+    <div class="topbar-user">
+      <div class="topbar-avatar">L</div>
+      <div class="topbar-name">land</div>
+    </div>
+  </div>
+
+  <main class="dashboard-main full-main">
+
+    <div class="yt-header">
+      <div class="yt-logo">▶ YouTube</div>
+      <div>
+        <div class="yt-title">YouTube Studio</div>
+        <div class="yt-sub">Gère ta chaîne directement depuis CRÉA-ACTION</div>
+      </div>
+      <div style="margin-left:auto;">
+        <button class="btn-yt">🔗 Connecter ma chaîne</button>
+      </div>
+    </div>
+
+    <div class="yt-banner">
+      <h2>Ta chaîne YouTube n'est pas encore connectée</h2>
+      <p>Connecte ton compte pour voir tes stats, vidéos et revenus en temps réel</p>
+      <button class="btn-yt">Connecter avec YouTube →</button>
+    </div>
+
+    <div class="yt-kpi">
+      <div class="yt-kpi-card"><div class="lbl">Abonnés</div><div class="val">—</div></div>
+      <div class="yt-kpi-card"><div class="lbl">Vues ce mois</div><div class="val">—</div></div>
+      <div class="yt-kpi-card"><div class="lbl">Revenus estimés</div><div class="val">—</div></div>
+      <div class="yt-kpi-card"><div class="lbl">Vidéos publiées</div><div class="val">—</div></div>
+    </div>
+
+    <div class="yt-grid">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header"><h2>Dernières vidéos</h2></div>
+        <div class="empty-box"><div class="ico">🎬</div><p>Connecte YouTube pour voir tes vidéos</p></div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header"><h2>Performances</h2></div>
+        <div class="empty-box"><div class="ico">📊</div><p>Connecte YouTube pour voir tes stats</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Player YouTube intégré</h2>
+        <span style="font-size:12px;color:var(--text-muted)">Tes vidéos s'afficheront ici</span>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;aspect-ratio:16/9;max-width:640px;margin:0 auto;display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:52px;opacity:0.12">▶</span>
+      </div>
+    </div>
+
+  </main>
+  <script src="app.js"></script>
+  <script src="ia-assistant.js"></script>
+</body>
+</html>

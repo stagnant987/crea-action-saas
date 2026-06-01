@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — CRÉA-ACTION</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .topbar {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 36px;
+      background:rgba(10,10,15,0.9); backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--border);
+    }
+    .topbar-brand { font-size:18px; font-weight:800; }
+    .topbar-brand span { color:var(--accent); }
+    .topbar-user { display:flex; align-items:center; gap:10px; }
+    .topbar-avatar {
+      width:32px; height:32px; border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:13px;
+    }
+    .topbar-name { font-size:13px; font-weight:600; color:var(--text-muted); }
+    .full-main { margin-left:0; padding:100px 48px 48px; }
+  </style>
+</head>
+<body class="dashboard-page">
+
+  <div class="topbar">
+    <div class="topbar-brand">CRÉA<span>ACTION</span></div>
+    <nav class="topbar-nav">
+      <a href="index.html">✦ ARIA</a>
+      <a href="dashboard.html" class="active">📊 Dashboard</a>
+      <a href="youtube.html">🎬 YouTube</a>
+      <a href="tiktok.html">🎵 TikTok</a>
+      <a href="instagram.html">📸 Instagram</a>
+    </nav>
+    <div class="topbar-user">
+      <div class="topbar-avatar">L</div>
+      <div class="topbar-name">land</div>
+    </div>
+  </div>
+
+  <main class="dashboard-main full-main">
+    <header class="dashboard-header">
+      <div>
+        <h1>Bonjour, Land 👋</h1>
+        <p class="header-sub">Bienvenue sur CRÉA-ACTION — demande à ARIA de t'aider à démarrer ✦</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary small">+ Connecter une plateforme</button>
+      </div>
+    </header>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent-green">
+        <div class="kpi-label">Revenus ce mois</div>
+        <div class="kpi-value kpi-empty">—</div>
+        <div class="kpi-change" style="color:var(--text-muted)">Aucune plateforme connectée</div>
+      </div>
+      <div class="kpi-card accent-blue">
+        <div class="kpi-label">Abonnés total</div>
+        <div class="kpi-value kpi-empty">—</div>
+        <div class="kpi-change" style="color:var(--text-muted)">Aucune plateforme connectée</div>
+      </div>
+      <div class="kpi-card accent-purple">
+        <div class="kpi-label">Vues totales</div>
+        <div class="kpi-value kpi-empty">—</div>
+        <div class="kpi-change" style="color:var(--text-muted)">Aucune plateforme connectée</div>
+      </div>
+      <div class="kpi-card accent-orange">
+        <div class="kpi-label">Taux d'engagement</div>
+        <div class="kpi-value kpi-empty">—</div>
+        <div class="kpi-change" style="color:var(--text-muted)">Aucune plateforme connectée</div>
+      </div>
+    </div>
+
+    <div class="onboarding-card">
+      <div class="onboarding-icon">✦</div>
+      <h2>ARIA est là pour toi</h2>
+      <p>Clique sur le bouton violet en bas à droite — ARIA te guide pas à pas</p>
+      <div class="onboarding-steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>Connecte une plateforme</strong>
+            <span>YouTube, TikTok, Instagram…</span>
+          </div>
+          <a href="youtube.html"><button class="btn-primary small">Connecter →</button></a>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <strong>Définis tes objectifs</strong>
+            <span>Abonnés, revenus, vues cibles</span>
+          </div>
+          <button class="btn-ghost small">Configurer →</button>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <strong>Suis ta progression</strong>
+            <span>Tes stats se mettent à jour automatiquement</span>
+          </div>
+          <button class="btn-ghost small" disabled style="opacity:0.4;cursor:default;">En attente</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>Plateformes disponibles</h2></div>
+      <div class="platforms-status">
+        <div class="platform-status-item">
+          <span>🎬 YouTube</span>
+          <a href="youtube.html"><button class="btn-primary small" style="font-size:11px;padding:5px 12px;">Ouvrir</button></a>
+        </div>
+        <div class="platform-status-item">
+          <span>🎵 TikTok</span>
+          <a href="tiktok.html"><button class="btn-primary small" style="font-size:11px;padding:5px 12px;">Ouvrir</button></a>
+        </div>
+        <div class="platform-status-item">
+          <span>📸 Instagram</span>
+          <a href="instagram.html"><button class="btn-primary small" style="font-size:11px;padding:5px 12px;">Ouvrir</button></a>
+        </div>
+        <div class="platform-status-item">
+          <span>🟣 Twitch</span>
+          <button class="btn-primary small" style="font-size:11px;padding:5px 12px;opacity:0.5;" disabled>Bientôt</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card studio-card">
+      <div class="card-header">
+        <h2>🎥 Studio Vidéo</h2>
+        <button class="btn-primary small">+ Nouvelle vidéo</button>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">🎬</div>
+        <p class="empty-title">Aucune vidéo pour l'instant</p>
+        <p class="empty-sub">Connecte une plateforme ou crée ta première vidéo</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script src="ia-assistant.js"></script>
+</body>
+</html>

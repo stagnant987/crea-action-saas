@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Créer un compte — CRÉA-ACTION</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .login-wrap {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg); position: relative;
+    }
+    .login-glow {
+      position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(124,92,252,0.12) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .login-card {
+      width: 100%; max-width: 420px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 48px 40px;
+      position: relative; z-index: 1;
+    }
+    .login-brand { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 8px; }
+    .login-brand span { color: var(--accent); }
+    .login-subtitle { text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 40px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+    .form-input {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px;
+      color: var(--text); font-size: 15px;
+      transition: border-color 0.2s; width: 100%;
+    }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .form-input::placeholder { color: var(--text-muted); }
+    .password-wrap { position: relative; }
+    .password-wrap .form-input { padding-right: 44px; }
+    .eye-btn {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 18px; padding: 0;
+      transition: color 0.2s;
+    }
+    .eye-btn:hover { color: var(--text); }
+    .form-submit {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s; margin-top: 8px;
+    }
+    .form-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+    .form-footer { text-align: center; margin-top: 24px; font-size: 13px; color: var(--text-muted); }
+    .form-footer a { color: var(--accent); font-weight: 600; }
+    .back-home {
+      position: absolute; top: 28px; left: 28px;
+      font-size: 13px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 6px; transition: color 0.2s;
+    }
+    .back-home:hover { color: var(--text); }
+    .error-msg {
+      background: rgba(255,79,79,0.1); border: 1px solid rgba(255,79,79,0.3);
+      color: var(--red); border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; margin-bottom: 16px; display: none;
+    }
+    .success-msg {
+      background: rgba(34,211,165,0.1); border: 1px solid rgba(34,211,165,0.3);
+      color: var(--green); border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; margin-bottom: 16px; display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-glow"></div>
+    <a href="index.html" class="back-home">← Accueil</a>
+
+    <div class="login-card">
+      <div class="login-brand">CRÉA<span>ACTION</span></div>
+      <p class="login-subtitle">Crée ton espace créateur</p>
+
+      <div class="error-msg" id="errorMsg"></div>
+      <div class="success-msg" id="successMsg">Compte créé ! Redirection...</div>
+
+      <form id="registerForm" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label class="form-label">Nom d'utilisateur</label>
+          <input type="text" class="form-input" id="username" placeholder="Ton pseudo" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Adresse email</label>
+          <input type="email" class="form-input" id="email" placeholder="toi@email.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mot de passe</label>
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="password" placeholder="••••••••" required>
+            <button type="button" class="eye-btn" onclick="togglePass('password', this)">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmer le mot de passe</label>
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="password2" placeholder="••••••••" required>
+            <button type="button" class="eye-btn" onclick="togglePass('password2', this)">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="form-submit">Créer mon compte →</button>
+      </form>
+
+      <div class="form-footer">
+        Déjà un compte ? <a href="login.html">Se connecter</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePass(id, btn) {
+      const input = document.getElementById(id);
+      if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+      else { input.type = 'password'; btn.textContent = '👁'; }
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const pass1    = document.getElementById('password').value;
+      const pass2    = document.getElementById('password2').value;
+      const err      = document.getElementById('errorMsg');
+      const ok       = document.getElementById('successMsg');
+
+      if (pass1 !== pass2) {
+        err.textContent = 'Les mots de passe ne correspondent pas.';
+        err.style.display = 'block'; return;
+      }
+      if (pass1.length < 4) {
+        err.textContent = 'Mot de passe trop court (4 caractères minimum).';
+        err.style.display = 'block'; return;
+      }
+
+      err.style.display = 'none';
+      ok.style.display = 'block';
+      setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+    }
+  </script>
+</body>
+</html>

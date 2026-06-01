@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion — CRÉA-ACTION</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .login-wrap {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg);
+      position: relative;
+    }
+    .login-glow {
+      position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(124,92,252,0.12) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .login-card {
+      width: 100%; max-width: 420px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 48px 40px;
+      position: relative; z-index: 1;
+    }
+    .login-brand {
+      font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 8px;
+    }
+    .login-brand span { color: var(--accent); }
+    .login-subtitle {
+      text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 40px;
+    }
+    .form-group {
+      display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px;
+    }
+    .form-label {
+      font-size: 13px; font-weight: 600; color: var(--text-muted);
+    }
+    .form-input {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px;
+      color: var(--text); font-size: 15px;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    .form-input:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .form-input::placeholder { color: var(--text-muted); }
+    .form-submit {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      margin-top: 8px;
+    }
+    .form-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+    .form-footer {
+      text-align: center; margin-top: 24px;
+      font-size: 13px; color: var(--text-muted);
+    }
+    .form-footer a { color: var(--accent); font-weight: 600; }
+    .password-wrap { position: relative; }
+    .password-wrap .form-input { padding-right: 44px; }
+    .eye-btn {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 18px; padding: 0;
+      transition: color 0.2s;
+    }
+    .eye-btn:hover { color: var(--text); }
+    .forgot-link {
+      display: block; text-align: right;
+      font-size: 12px; color: var(--accent);
+      margin-top: -12px; margin-bottom: 20px;
+      font-weight: 600;
+    }
+    .forgot-link:hover { opacity: 0.8; }
+    .back-home {
+      position: absolute; top: 28px; left: 28px;
+      font-size: 13px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 6px;
+      transition: color 0.2s;
+    }
+    .back-home:hover { color: var(--text); }
+    .error-msg {
+      background: rgba(255,79,79,0.1); border: 1px solid rgba(255,79,79,0.3);
+      color: var(--red); border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; margin-bottom: 16px; display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-glow"></div>
+    <a href="index.html" class="back-home">← Accueil</a>
+
+    <div class="login-card">
+      <div class="login-brand">CRÉA<span>ACTION</span></div>
+      <p class="login-subtitle">Connecte-toi à ton espace créateur</p>
+
+      <div class="error-msg" id="errorMsg">Email ou mot de passe incorrect.</div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label">Identifiant</label>
+          <input type="text" class="form-input" id="email" placeholder="Nom d'utilisateur" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mot de passe</label>
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="password" placeholder="••••••••" required>
+            <button type="button" class="eye-btn" onclick="togglePassword()">👁</button>
+          </div>
+        </div>
+        <a href="#" class="forgot-link" onclick="forgotPassword()">Mot de passe oublié ?</a>
+        <button type="submit" class="form-submit">Se connecter →</button>
+      </form>
+
+      <div class="form-footer">
+        Pas encore de compte ? <a href="inscription.html">Créer un compte</a>
+      </div>
+
+      <!-- ÉTAPE 1 : saisir email -->
+      <div id="forgotStep1" style="display:none">
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;">Entre ton adresse email pour recevoir un code de récupération.</p>
+        <div class="form-group">
+          <label class="form-label">Adresse email</label>
+          <input type="email" class="form-input" id="recoveryEmail" placeholder="toi@email.com" required>
+        </div>
+        <button class="form-submit" id="sendCodeBtn" onclick="sendCode()">Envoyer le code →</button>
+        <div class="form-footer" style="margin-top:16px"><a href="#" onclick="location.reload()">← Retour</a></div>
+      </div>
+
+      <!-- ÉTAPE 2 : saisir le code reçu -->
+      <div id="forgotStep2" style="display:none">
+        <p id="codeDisplay" style="font-size:18px;font-weight:800;color:var(--accent);text-align:center;margin-bottom:20px;"></p>
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;">Entre ce code ci-dessous.</p>
+        <div class="form-group">
+          <label class="form-label">Code de récupération</label>
+          <input type="text" class="form-input" id="codeInput" placeholder="123456" maxlength="6">
+        </div>
+        <div id="codeError" style="display:none;color:var(--red);font-size:13px;margin-bottom:12px;">Code incorrect.</div>
+        <button class="form-submit" onclick="verifyCode()">Vérifier →</button>
+      </div>
+
+      <!-- ÉTAPE 3 : nouveau mot de passe -->
+      <div id="forgotStep3" style="display:none">
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;">Choisis un nouveau mot de passe.</p>
+        <div class="form-group">
+          <label class="form-label">Nouveau mot de passe</label>
+          <input type="password" class="form-input" id="newPass" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmer</label>
+          <input type="password" class="form-input" id="newPass2" placeholder="••••••••">
+        </div>
+        <div id="passError" style="display:none;color:var(--red);font-size:13px;margin-bottom:12px;">Mots de passe différents ou trop courts.</div>
+        <button class="form-submit" onclick="resetPassword()">Mettre à jour →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script>
+    // === EMAILJS CONFIG — à remplir après création compte emailjs.com ===
+    const EMAILJS_PUBLIC_KEY  = "obQqimwdOnvDfn-Ad";
+    const EMAILJS_SERVICE_ID  = "service_6f7amjy";
+    const EMAILJS_TEMPLATE_ID = "t6ecfwa";
+  </script>
+  <script>
+    function togglePassword() {
+      const input = document.getElementById('password');
+      const btn = document.querySelector('.eye-btn');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁';
+      }
+    }
+
+    let recoveryCode = null;
+
+    function forgotPassword() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('forgotStep1').style.display = 'block';
+    }
+
+    async function sendCode() {
+      const email = document.getElementById('recoveryEmail').value.trim();
+      if (!email) return;
+
+      const btn = document.getElementById('sendCodeBtn');
+      btn.textContent = 'Envoi...';
+      btn.disabled = true;
+
+      recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+      document.getElementById('forgotStep1').style.display = 'none';
+      document.getElementById('forgotStep2').style.display = 'block';
+      document.getElementById('codeDisplay').textContent = 'Ton code : ' + recoveryCode;
+    }
+
+    function verifyCode() {
+      const entered = document.getElementById('codeInput').value.trim();
+      const err = document.getElementById('codeError');
+      if (entered === recoveryCode) {
+        document.getElementById('forgotStep2').style.display = 'none';
+        document.getElementById('forgotStep3').style.display = 'block';
+      } else {
+        err.style.display = 'block';
+      }
+    }
+
+    function resetPassword() {
+      const p1 = document.getElementById('newPass').value;
+      const p2 = document.getElementById('newPass2').value;
+      const err = document.getElementById('passError');
+      if (p1 !== p2 || p1.length < 4) {
+        err.style.display = 'block';
+        return;
+      }
+      alert('Mot de passe mis à jour ! Reconnecte-toi.');
+      location.reload();
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const err = document.getElementById('errorMsg');
+
+      // Credentials locaux (démo)
+      const USERS = [
+        { email: 'land', password: 'land' }
+      ];
+
+      const match = USERS.find(u => (u.email === email) && u.password === password);
+      if (match) {
+        err.style.display = 'none';
+        window.location.href = 'dashboard.html';
+      } else {
+        err.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

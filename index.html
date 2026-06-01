@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRÉA-ACTION</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { margin:0; background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+    .ia-topbar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 32px; border-bottom:1px solid var(--border);
+      background:rgba(10,10,15,0.95); backdrop-filter:blur(12px);
+    }
+    .ia-brand { font-size:18px; font-weight:800; }
+    .ia-brand span { color:var(--accent); }
+    .ia-topbar-right { display:flex; gap:8px; }
+
+    .ia-main {
+      flex:1; display:flex; flex-direction:column;
+      max-width:760px; width:100%; margin:0 auto;
+      padding:24px 20px 0; overflow:hidden;
+    }
+
+    .ia-intro { text-align:center; padding:28px 0 20px; }
+    .ia-avatar {
+      width:68px; height:68px; border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex; align-items:center; justify-content:center;
+      font-size:26px; margin:0 auto 14px;
+      box-shadow:0 8px 32px rgba(124,92,252,0.4);
+    }
+    .ia-intro h1 { font-size:20px; font-weight:800; margin-bottom:6px; }
+    .ia-intro p { color:var(--text-muted); font-size:14px; }
+
+    .ia-messages { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:14px; padding-bottom:14px; scrollbar-width:thin; scrollbar-color:#2a2a3a transparent; }
+
+    .ia-msg { display:flex; gap:10px; }
+    .ia-msg.bot { justify-content:flex-start; }
+    .ia-msg.user { justify-content:flex-end; }
+
+    .ia-bubble { max-width:80%; padding:12px 16px; border-radius:14px; font-size:14px; line-height:1.65; }
+    .bot .ia-bubble { background:var(--bg2); border:1px solid var(--border); border-bottom-left-radius:4px; }
+    .user .ia-bubble { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border-bottom-right-radius:4px; }
+
+    .ia-bot-icon { width:30px; height:30px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:13px; margin-top:2px; }
+
+    .ia-suggestions { display:flex; flex-wrap:wrap; gap:8px; padding:10px 0; }
+    .ia-suggest { background:var(--bg2); border:1px solid var(--border); padding:8px 14px; border-radius:99px; font-size:13px; cursor:pointer; transition:border-color 0.2s,background 0.2s; color:var(--text); }
+    .ia-suggest:hover { border-color:var(--accent); background:rgba(124,92,252,0.08); }
+
+    .ia-input-zone { padding:14px 0 20px; border-top:1px solid var(--border); display:flex; gap:10px; }
+    .ia-input { flex:1; background:var(--bg2); border:1px solid var(--border); color:var(--text); border-radius:12px; padding:13px 16px; font-size:14px; outline:none; transition:border-color 0.2s; }
+    .ia-input:focus { border-color:var(--accent); }
+    .ia-send { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; border-radius:12px; padding:13px 20px; font-size:18px; cursor:pointer; }
+    .ia-send:hover { opacity:0.85; }
+
+    .ia-dot-anim { display:flex; gap:4px; }
+    .ia-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); animation:dotP 1.2s infinite; }
+    .ia-dot:nth-child(2) { animation-delay:0.2s; }
+    .ia-dot:nth-child(3) { animation-delay:0.4s; }
+    @keyframes dotP { 0%,80%,100%{transform:scale(0.7);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+  </style>
+</head>
+<body>
+
+  <div class="ia-topbar">
+    <div class="ia-brand">CRÉA<span>ACTION</span></div>
+    <div class="ia-topbar-right">
+      <a href="dashboard.html"><button class="btn-ghost small">📊 Dashboard</button></a>
+      <a href="youtube.html"><button class="btn-ghost small">🎬 YouTube</button></a>
+      <a href="tiktok.html"><button class="btn-ghost small">🎵 TikTok</button></a>
+      <a href="instagram.html"><button class="btn-ghost small">📸 Instagram</button></a>
+    </div>
+  </div>
+
+  <div class="ia-main">
+    <div class="ia-intro" id="ia-intro">
+      <div class="ia-avatar">✦</div>
+      <h1>Je suis ARIA, ton assistante CRÉA-ACTION</h1>
+      <p>Dis-moi ce que tu veux faire — je m'occupe de tout.</p>
+    </div>
+
+    <div class="ia-messages" id="ia-messages"></div>
+
+    <div class="ia-suggestions" id="ia-suggests">
+      <button class="ia-suggest">🎬 YouTube</button>
+      <button class="ia-suggest">🎵 TikTok</button>
+      <button class="ia-suggest">📸 Instagram</button>
+      <button class="ia-suggest">📊 Dashboard</button>
+      <button class="ia-suggest">💰 Mes revenus</button>
+      <button class="ia-suggest">🎥 Studio Vidéo</button>
+    </div>
+
+    <div class="ia-input-zone">
+      <input class="ia-input" id="ia-input" type="text" placeholder="Parle à ARIA…" autocomplete="off"/>
+      <button class="ia-send" id="ia-send">→</button>
+    </div>
+  </div>
+
+  <script>
+    const RESPONSES = {
+      "youtube":   { text: "Je t'emmène sur YouTube Studio.", link: "youtube.html" },
+      "tiktok":    { text: "Voici ton espace TikTok.", link: "tiktok.html" },
+      "instagram": { text: "Voici Instagram Studio.", link: "instagram.html" },
+      "dashboard": { text: "Vue d'ensemble de toutes tes plateformes.", link: "dashboard.html" },
+      "revenus":   { text: "Tes revenus s'affichent sur le dashboard.", link: "dashboard.html" },
+      "studio":    { text: "Le Studio Vidéo est sur le dashboard.", link: "dashboard.html" },
+      "bonjour":   { text: "Bonjour ! Que veux-tu faire ?", link: null },
+      "aide":      { text: "Dis-moi : YouTube, TikTok, Instagram ou Dashboard ?", link: null },
+    };
+
+    const msgs = document.getElementById('ia-messages');
+    const input = document.getElementById('ia-input');
+    const intro = document.getElementById('ia-intro');
+    const suggests = document.getElementById('ia-suggests');
+
+    document.querySelectorAll('.ia-suggest').forEach(btn => {
+      btn.addEventListener('click', () => handle(btn.textContent.trim()));
+    });
+    document.getElementById('ia-send').addEventListener('click', () => handle(input.value.trim()));
+    input.addEventListener('keydown', e => { if(e.key==='Enter') handle(input.value.trim()); });
+
+    function handle(text) {
+      if (!text) return;
+      intro.style.display = 'none';
+      suggests.style.display = 'none';
+      addMsg(text, 'user');
+      input.value = '';
+      typing();
+      setTimeout(() => {
+        untyping();
+        const r = getResp(text);
+        addMsg(r.text, 'bot', r.link);
+      }, 800);
+    }
+
+    function getResp(text) {
+      const t = text.toLowerCase();
+      for (const [k,v] of Object.entries(RESPONSES)) if (t.includes(k)) return v;
+      if (t.includes('plan')) return { text: "Voici ton plan CRÉA-ACTION :<br><br>1️⃣ Connecte YouTube, TikTok et Instagram<br>2️⃣ Suis tes revenus depuis le Dashboard<br>3️⃣ Gère tes vidéos depuis le Studio<br>4️⃣ Définis tes objectifs mensuels<br><br>Par où tu veux commencer ?", link: null };
+      if (t.includes('quoi') || t.includes('sert') || t.includes('fais')) return { text: "Je suis ARIA, ton assistante CRÉA-ACTION. Je te guide vers tes plateformes, tes revenus et tes stats. Dis-moi ce que tu veux !", link: null };
+      if (t.includes('qui') || t.includes('tu es')) return { text: "Je suis ARIA — l'intelligence artificielle de CRÉA-ACTION. Je suis ton opérateur principal.", link: null };
+      if (t.includes('salut') || t.includes('bonjour') || t.includes('allo')) return { text: "Bonjour ! Je suis ARIA. Dis-moi ce que tu veux faire.", link: null };
+      if (t.includes('merci')) return { text: "Avec plaisir ! Je suis là 24h/24. 🚀", link: null };
+      if (t.includes('bien') || t.includes('super') || t.includes('top')) return { text: "Parfait ! Qu'est-ce qu'on fait maintenant ?", link: null };
+      return { text: "Je n'ai pas compris. Dis-moi ce que tu veux : YouTube, TikTok, Instagram, Dashboard, ou pose-moi n'importe quelle question !", link: null };
+    }
+
+    function addMsg(text, who, link=null) {
+      const d = document.createElement('div');
+      d.className = `ia-msg ${who}`;
+      const icon = who==='bot' ? '<div class="ia-bot-icon">✦</div>' : '';
+      const btn = link ? `<br><br><a href="${link}" style="display:inline-block;background:linear-gradient(135deg,#7c5cfc,#c45cf6);color:#fff;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">Ouvrir →</a>` : '';
+      d.innerHTML = `${icon}<div class="ia-bubble">${text}${btn}</div>`;
+      msgs.appendChild(d);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function typing() {
+      const d = document.createElement('div');
+      d.id='tp'; d.className='ia-msg bot';
+      d.innerHTML='<div class="ia-bot-icon">✦</div><div class="ia-bubble"><div class="ia-dot-anim"><div class="ia-dot"></div><div class="ia-dot"></div><div class="ia-dot"></div></div></div>';
+      msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
+    }
+    function untyping() { const d=document.getElementById('tp'); if(d) d.remove(); }
+  </script>
+</body>
+</html>

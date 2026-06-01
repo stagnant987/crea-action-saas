@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TikTok Studio — CRÉA-ACTION</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .tt-header { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+    .tt-logo { background:#010101; color:#fff; font-weight:900; font-size:14px; padding:6px 12px; border-radius:6px; border:1px solid #2a2a2a; }
+    .tt-logo .tt-cyan { color:#25f4ee; }
+    .tt-logo .tt-red  { color:#fe2c55; }
+    .tt-title { font-size:22px; font-weight:800; }
+    .tt-sub { color:var(--text-muted); font-size:13px; }
+    .tt-kpi { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+    .tt-kpi-card { background:var(--bg2); border:1px solid var(--border); border-left:4px solid #fe2c55; border-radius:var(--radius); padding:14px; }
+    .tt-kpi-card .kpi-label { font-size:11px; color:var(--text-muted); margin-bottom:4px; }
+    .tt-kpi-card .kpi-value { font-size:22px; font-weight:800; color:var(--text-muted); }
+    .tt-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+    .empty-tt { display:flex; flex-direction:column; align-items:center; padding:32px; color:var(--text-muted); gap:8px; }
+    .empty-tt span { font-size:32px; opacity:0.25; }
+    .empty-tt p { font-size:13px; }
+  </style>
+</head>
+<body class="dashboard-page">
+  <div class="topbar">
+    <div class="topbar-brand">CRÉA<span>ACTION</span></div>
+    <nav class="topbar-nav">
+      <a href="index.html">✦ ARIA</a>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="youtube.html">🎬 YouTube</a>
+      <a href="tiktok.html" class="active">🎵 TikTok</a>
+      <a href="instagram.html">📸 Instagram</a>
+    </nav>
+    <div class="topbar-user">
+      <div class="topbar-avatar">L</div>
+      <div class="topbar-name">land</div>
+    </div>
+  </div>
+
+  <main class="dashboard-main full-main">
+    <div class="tt-header">
+      <div class="tt-logo"><span class="tt-cyan">Tik</span><span class="tt-red">Tok</span></div>
+      <div>
+        <div class="tt-title">TikTok Studio</div>
+        <div class="tt-sub">Gère tes vidéos TikTok depuis CRÉA-ACTION</div>
+      </div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(254,44,85,0.07),rgba(37,244,238,0.04));border:1px solid rgba(254,44,85,0.2);border-radius:var(--radius);padding:20px 28px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:16px;font-weight:800;margin-bottom:4px;">Ton compte TikTok</div>
+        <div style="font-size:13px;color:var(--text-muted);">Intégration API en cours de développement</div>
+      </div>
+      <button style="background:#fe2c55;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">🔗 Connecter TikTok</button>
+    </div>
+
+    <div class="tt-kpi">
+      <div class="tt-kpi-card"><div class="kpi-label">Abonnés</div><div class="kpi-value">—</div></div>
+      <div class="tt-kpi-card"><div class="kpi-label">Vues ce mois</div><div class="kpi-value">—</div></div>
+      <div class="tt-kpi-card"><div class="kpi-label">Likes totaux</div><div class="kpi-value">—</div></div>
+      <div class="tt-kpi-card"><div class="kpi-label">Vidéos publiées</div><div class="kpi-value">—</div></div>
+    </div>
+
+    <div class="tt-row">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header"><h2>Dernières vidéos</h2></div>
+        <div class="empty-tt"><span>🎵</span><p>API TikTok en cours de développement</p></div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header"><h2>Performances</h2></div>
+        <div class="empty-tt"><span>📊</span><p>API TikTok en cours de développement</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>Tendances TikTok</h2></div>
+      <div class="empty-tt"><span>🔥</span><p>API TikTok en cours de développement</p></div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script src="ia-assistant.js"></script>
+</body>
+</html>
